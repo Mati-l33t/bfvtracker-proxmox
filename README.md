@@ -276,7 +276,35 @@ curl -fsSL https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main/w
 
 ---
 
+## What's been updated from the original selectbf
+
+The original [selectbf](https://github.com/toadle/selectbf) is legacy software from ~2005.  
+Its own README states: *"Full scale development has ceased for about 10 years now."*  
+The original requirements were PHP 4.3.2+, MySQL 4.0.13+, and Java 1.4+ for the parser.
+
+This project keeps selectbf's log parser and classic PHP UI as an optional component, but wraps it in a modern, maintained stack:
+
+| Area | Original selectbf | This project |
+|------|-------------------|--------------|
+| **PHP** | PHP 4.3 — 8.x (barely) | PHP 8.2+ fully supported |
+| **Database** | MySQL 4.0 | MariaDB 10.x / MySQL 8 |
+| **Web server** | Any — manual config | nginx, auto-configured |
+| **Log access** | FTP download only | Local path, bind-mount, rsync, or sshfs |
+| **Setup** | Manual: edit config files, run `_setup.php` in browser | Fully automated one-line installer |
+| **Admin auth** | MD5 password (PHP session) | bcrypt hash (modern UI) |
+| **Stats UI** | Classic PHP pages only | Optional modern dark SPA with live scoreboard, rankings, player profiles |
+| **Live server** | Not included | GameSpy UDP query — live player list, scores, tickets |
+| **Live chat** | Not included | Real-time BFV chat log parsed from XML |
+| **Ban management** | Not included | Admin panel — sync from `serverbanlist.con`, add/remove bans |
+| **Duplicate games** | Parser re-processes files, creates duplicates | Dedup filter in API + rsync exclusion list |
+| **Parser trigger** | Manual or FTP cron | HTTP API endpoint + optional cron |
+| **Proxmox support** | None | Native LXC installer with bind-mount docs |
+
+The selectbf PHP parser itself (log parsing logic) is unchanged — it is what reads the BFV XML log files and populates the database. Everything around it has been modernised.
+
+---
+
 ## Credits
 
-- [selectbf](https://github.com/select-bf/selectbf) — original BFV log parser and classic stats UI
+- [selectbf](https://github.com/toadle/selectbf) — original BFV log parser and classic stats UI
 - Modern UI + FastAPI backend by [Mati-l33t](https://github.com/Mati-l33t)
