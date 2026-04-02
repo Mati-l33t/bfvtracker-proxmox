@@ -532,14 +532,25 @@ def player_detail(player_id: int):
 # ─── ROUTES: GAMES ────────────────────────────────────────────────────────────
 @app.get("/api/games")
 def games(limit: int = Query(20, le=100), offset: int = Query(0)):
-    # Paginate first, then aggregate player counts only for those rows
-    sql = """
+    # Deduplicate: the BFV server creates two log files per session (setup + game),
+    # causing selectbf to insert two near-identical game records seconds apart.
+    # Keep only the highest-ID game when duplicates share the same map within 30s.
+    dedup_filter = """
+        NOT EXISTS (
+            SELECT 1 FROM selectbf_games g2
+            WHERE g2.map = g.map
+              AND g2.id > g.id
+              AND ABS(TIMESTAMPDIFF(SECOND, g2.starttime, g.starttime)) <= 60
+        )
+    """
+    sql = f"""
         SELECT g.id, g.starttime AS start_time, g.servername AS server_name,
                g.modid AS mod_name, g.map AS map_name, g.game_mode AS gamemode,
                COALESCE(pc.player_count, 0) AS player_count
         FROM (
             SELECT id, starttime, servername, modid, map, game_mode
-            FROM selectbf_games
+            FROM selectbf_games g
+            WHERE {dedup_filter}
             ORDER BY starttime DESC
             LIMIT %s OFFSET %s
         ) g
@@ -552,7 +563,7 @@ def games(limit: int = Query(20, le=100), offset: int = Query(0)):
         ORDER BY g.starttime DESC
     """
     rows  = q(sql, [limit, offset])
-    total = q1("SELECT COUNT(*) c FROM selectbf_games")
+    total = q1(f"SELECT COUNT(*) c FROM selectbf_games g WHERE {dedup_filter}")
     return {"total": total["c"] if total else 0, "games": rows}
 
 @app.get("/api/games/{game_id}")
