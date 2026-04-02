@@ -1,0 +1,17 @@
+[Unit]
+Description=BFV Stats FastAPI backend
+After=network.target mariadb.service
+Wants=mariadb.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/bfvstats
+EnvironmentFile=/opt/bfvstats/.env
+ExecStart=/opt/bfvstats/venv/bin/uvicorn api:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=on-failure
+RestartSec=5
+ReadWritePaths=/opt/bfvstats
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,2197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BFV Stats — GmV Server</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090c;--bg2:#0c1118;--bg3:#101820;--bg4:#141f2a;
+  --border:#1a2940;--border2:#102030;
+  --acc:#e08820;--acc2:#9a5a0a;--acc-glow:rgba(224,136,32,.15);
+  --green:#22a85a;--red:#c0392b;--yellow:#f0c030;--silver:#98b0c0;--bronze:#b87040;
+  --hi:#dde8f0;--mid:#7090a8;--lo:#304560;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--hi);font-family:'Barlow Condensed',sans-serif;min-height:100vh;overflow-x:hidden;overflow-x:clip}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:inherit}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.03) 3px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:9999}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;padding:0 20px;gap:0}
+.logo{display:flex;align-items:center;gap:10px;margin-right:24px;flex-shrink:0}
+.logo-hex{width:32px;height:32px;background:var(--acc);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#000}
+.logo-text{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;letter-spacing:3px}
+.logo-text span{color:var(--acc)}
+nav{display:flex;gap:1px;flex:1;flex-wrap:wrap}
+nav a{padding:5px 12px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);border:1px solid transparent;border-radius:3px;transition:.12s;white-space:nowrap;cursor:pointer}
+nav a:hover{color:var(--hi);background:var(--bg3);border-color:var(--border)}
+nav a.active{color:var(--acc);background:var(--acc-glow);border-color:var(--acc2)}
+.server-pill{margin-left:auto;display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(34,168,90,.08);border:1px solid rgba(34,168,90,.3);border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);white-space:nowrap;flex-shrink:0}
+.dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--bg2),#0d1e30,var(--bg2));border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
+.hero::before{content:'VIETNAM';position:absolute;right:10px;font-family:'Rajdhani',sans-serif;font-size:110px;font-weight:700;color:rgba(224,136,32,.04);top:-18px;pointer-events:none;user-select:none}
+.hero-stats{display:flex}
+.hstat{padding:0 20px;border-right:1px solid var(--border)}
+.hstat:first-child{padding-left:0}
+.hstat:last-child{border-right:none}
+.hstat-v{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:var(--acc);line-height:1}
+.hstat-l{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--lo);margin-top:2px}
+.hero-meta{text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lo);line-height:1.9}
+.hero-meta strong{color:var(--mid)}
+
+/* LAYOUT */
+.page{max-width:1440px;width:100%;box-sizing:border-box;margin:0 auto;padding:20px 22px;display:none}
+.page.visible{display:block}
+
+/* BREADCRUMB */
+.bc{display:flex;align-items:center;gap:6px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:16px}
+.bc span{color:var(--mid);cursor:pointer}
+.bc span.cur{color:var(--acc);cursor:default}
+.bc-sep{opacity:.4;cursor:default}
+
+/* BACK BUTTON */
+.back-btn{background:var(--bg3);border:1px solid var(--border);color:var(--mid);padding:5px 14px;border-radius:3px;font-size:11px;font-family:'JetBrains Mono',monospace;margin-bottom:14px;cursor:pointer;display:inline-block;transition:.12s}
+.back-btn:hover{color:var(--hi);border-color:var(--border)}
+
+/* SECTION TITLE */
+.stitle{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--hi);display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.stitle::before{content:'';width:3px;height:15px;background:var(--acc);border-radius:2px;flex-shrink:0}
+
+/* CARD / PANEL */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.card-hdr{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 14px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--mid);display:flex;align-items:center;justify-content:space-between}
+
+/* TABS */
+.tabs{display:flex;gap:1px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.tab{padding:7px 16px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);cursor:pointer;border-bottom:2px solid transparent;position:relative;top:1px;transition:.12s}
+.tab:hover{color:var(--mid)}
+.tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+
+/* TABLE */
+.tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:var(--bg3);border-bottom:1px solid var(--border)}
+thead th{padding:8px 10px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);white-space:nowrap;cursor:pointer;user-select:none;transition:.12s}
+thead th:hover{color:var(--mid)}
+thead th.sa{color:var(--acc)}
+thead th.tl{text-align:left}
+tbody tr{background:var(--bg2);border-bottom:1px solid var(--border2);transition:.1s;cursor:pointer}
+tbody tr:hover{background:var(--bg4)}
+tbody td{padding:7px 10px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mid);white-space:nowrap}
+tbody td.tl{text-align:left}
+tbody td.hi{color:var(--hi)}
+
+/* RANKING NUMBER */
+.rn{display:inline-block;min-width:22px;font-size:10px;color:var(--lo)}
+.rn.g{color:var(--yellow);font-weight:700}
+.rn.s{color:var(--silver);font-weight:700}
+.rn.b{color:var(--bronze);font-weight:700}
+
+/* PLAYER CELL */
+.pcell{display:flex;align-items:center;gap:7px}
+.av{width:20px;height:20px;background:linear-gradient(135deg,var(--acc2),var(--acc));border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#000;flex-shrink:0}
+.plink{color:var(--hi);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;transition:.12s}
+.plink:hover{color:var(--acc)}
+.ctag{font-size:9px;color:var(--acc);font-family:'JetBrains Mono',monospace;background:rgba(224,136,32,.1);border:1px solid rgba(224,136,32,.2);padding:1px 4px;border-radius:2px}
+
+/* KD COLORS */
+.kp{color:var(--green)}
+.kn{color:var(--red)}
+
+/* PROGRESS BAR */
+.pbar{height:2px;background:var(--border);border-radius:1px;overflow:hidden;min-width:40px}
+.pbar-fill{height:100%;background:var(--acc);border-radius:1px;opacity:.65}
+
+/* scbar and pav-l removed — replaced by SVG medals and plain score column */
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.bw{background:rgba(34,168,90,.12);color:var(--green);border:1px solid rgba(34,168,90,.3)}
+.bl{background:rgba(192,57,43,.12);color:var(--red);border:1px solid rgba(192,57,43,.3)}
+.bd{background:rgba(143,163,179,.08);color:var(--mid);border:1px solid var(--border)}
+
+/* PAGINATION */
+.pag{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-top:1px solid var(--border);font-size:10px;color:var(--lo);font-family:'JetBrains Mono',monospace}
+.pag-btns{display:flex;gap:3px}
+.pbtn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:3px;font-size:10px;transition:.12s;color:var(--mid);cursor:pointer}
+.pbtn:hover,.pbtn.on{border-color:var(--acc2);color:var(--acc)}
+
+/* SEARCH ROW */
+.srow{display:flex;gap:8px;padding:10px 12px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.s-input{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--hi);outline:none;transition:.12s;min-width:0}
+.s-input:focus{border-color:var(--acc2)}
+.s-input::placeholder{color:var(--lo)}
+.s-select{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--hi);outline:none;appearance:none}
+.fbtn{padding:6px 12px;background:transparent;border:1px solid var(--border);border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--mid);transition:.12s}
+.fbtn:hover,.fbtn.on{border-color:var(--acc2);color:var(--acc);background:var(--acc-glow)}
+
+/* PODIUM */
+.podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px}
+.pcard{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+.pcard::after{content:attr(data-n);position:absolute;right:8px;bottom:-16px;font-family:'Rajdhani',sans-serif;font-size:80px;font-weight:700;opacity:.05;color:#fff;line-height:1;pointer-events:none}
+.pcard:hover{border-color:var(--acc2);background:var(--bg4)}
+.pcard.p1{border-top:2px solid var(--yellow)}
+.pcard.p2{border-top:2px solid var(--silver)}
+.pcard.p3{border-top:2px solid var(--bronze)}
+/* pav-l replaced by medal SVGs */
+.pi{flex:1;min-width:0}
+.pn{font-size:15px;font-weight:700;color:var(--hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps{display:flex;gap:14px;margin-top:5px}
+.ps-v{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--acc)}
+.ps-l{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)}
+
+/* SIDEBAR */
+.two-col{display:grid;grid-template-columns:minmax(0,1fr) 262px;gap:16px;align-items:start}
+.two-col>*{min-width:0}
+
+/* WIDGET */
+.widget{background:var(--bg2);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:12px}
+.widget:last-child{margin-bottom:0}
+.wh{padding:8px 14px;background:var(--bg3);border-bottom:1px solid var(--border);font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)}
+.wr{padding:8px 14px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center;font-size:11px;cursor:pointer;transition:.1s}
+.wr:last-child{border-bottom:none}
+.wr:hover{background:var(--bg4)}
+.wr-l{color:var(--mid)}
+.wr-v{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--acc)}
+.wbr{padding:6px 14px;border-bottom:1px solid var(--border2)}
+.wbr:last-child{border-bottom:none}
+.wbr-top{display:flex;justify-content:space-between;margin-bottom:3px;font-size:11px}
+.wbr-n{color:var(--mid)}
+.wbr-k{font-family:'JetBrains Mono',monospace;color:var(--acc);font-size:10px}
+.grow{display:grid;grid-template-columns:70px 1fr auto;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border2);cursor:pointer;transition:.1s}
+.grow:last-child{border-bottom:none}
+.grow:hover{background:var(--bg4)}
+.gdate{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lo);line-height:1.5}
+.gmap{font-size:13px;font-weight:600;color:var(--hi)}
+.gsub{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lo);margin-top:1px}
+.gright{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.gscore{font-family:'JetBrains Mono',monospace;font-size:10px}
+
+/* PLAYER PROFILE HERO */
+.pp-hero{background:linear-gradient(135deg,var(--bg2),#0c1e30);border:1px solid var(--border);border-radius:4px;padding:18px;display:grid;grid-template-columns:56px 1fr;gap:16px;align-items:center;margin-bottom:16px}
+.pp-big-av{width:56px;height:56px;background:linear-gradient(135deg,var(--acc2),var(--acc));border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:#000;flex-shrink:0}
+.pp-info{display:flex;flex-direction:column;gap:4px}
+.pp-name{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;letter-spacing:1px;color:var(--hi);line-height:1}
+.pp-sub{font-size:11px;color:var(--lo);font-family:'JetBrains Mono',monospace}
+.pp-kpis{display:flex;gap:0;flex-wrap:wrap;margin-top:8px}
+.pkpi{padding:0 16px;border-right:1px solid var(--border);text-align:center}
+.pkpi:first-child{padding-left:0}
+.pkpi:last-child{border-right:none}
+.pkpi-v{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--acc);line-height:1}
+.pkpi-l{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--lo);margin-top:2px}
+
+/* DETAIL ROWS */
+.drow{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border2)}
+.drow:last-child{border-bottom:none}
+.drow:nth-child(even){background:var(--bg3)}
+.dk{padding:7px 14px;font-size:11px;color:var(--lo);font-family:'JetBrains Mono',monospace;border-right:1px solid var(--border2)}
+.dv{padding:7px 14px;font-size:12px;color:var(--hi)}
+
+/* AWARDS */
+.awards{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.award{background:linear-gradient(135deg,var(--acc2),var(--acc));border-radius:3px;padding:2px 7px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#000}
+.award.gold{background:linear-gradient(135deg,#9a7000,var(--yellow))}
+.award.silver{background:linear-gradient(135deg,#607080,var(--silver))}
+.award.bronze{background:linear-gradient(135deg,#7a4010,var(--bronze))}
+
+/* GAME DETAIL */
+.round-box{background:var(--bg2);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:14px}
+.round-box:last-child{margin-bottom:0}
+.round-hdr{background:var(--bg3);border-bottom:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;justify-content:space-between}
+.round-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--hi)}
+.round-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lo)}
+.round-body{padding:14px}
+.ticket-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.tk-box{border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.tk-hdr{padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:'Rajdhani',sans-serif}
+.tk-hdr.r{background:rgba(140,30,30,.3);border-bottom:1px solid rgba(140,30,30,.3);color:#f0a0a0}
+.tk-hdr.b{background:rgba(30,60,140,.3);border-bottom:1px solid rgba(30,60,140,.3);color:#a0c0f0}
+.tk-row{padding:5px 12px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;font-size:11px}
+.tk-row:last-child{border-bottom:none}
+.tk-row span:first-child{color:var(--mid)}
+.tk-row span:last-child{font-family:'JetBrains Mono',monospace;color:var(--hi)}
+.winner-bar{text-align:center;padding:8px;border-radius:3px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:'Rajdhani',sans-serif;margin-bottom:12px}
+.winner-bar.r{background:rgba(140,30,30,.2);border:1px solid rgba(140,30,30,.35);color:#f0a0a0}
+.winner-bar.b{background:rgba(30,60,140,.2);border:1px solid rgba(30,60,140,.35);color:#a0c0f0}
+.team-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.team-tbl-hdr.r{background:rgba(140,30,30,.2);color:#f0a0a0;padding:6px 10px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(140,30,30,.3)}
+.team-tbl-hdr.b{background:rgba(30,60,140,.2);color:#a0c0f0;padding:6px 10px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(30,60,140,.3)}
+.eog-t{width:100%;border-collapse:collapse;font-size:11px}
+.eog-t thead tr{background:var(--bg3);border-bottom:1px solid var(--border)}
+.eog-t thead th{padding:6px 8px;font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);text-align:right}
+.eog-t thead th.tl{text-align:left}
+.eog-t tbody tr{background:var(--bg2);border-bottom:1px solid var(--border2);transition:.1s;cursor:pointer}
+.eog-t tbody tr:hover{background:var(--bg4)}
+.eog-t tbody td{padding:6px 8px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mid)}
+.eog-t tbody td.tl{text-align:left}
+
+/* CHAT LOG */
+.chat-box{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mid);line-height:1.8;max-height:140px;overflow-y:auto;margin-bottom:12px}
+.chat-t{color:var(--lo)}
+.chat-p{color:var(--acc)}
+.chat-all{color:var(--mid)}
+.chat-team{color:var(--green)}
+.chat-dead{color:var(--lo);text-decoration:line-through}
+
+/* MAP PAGE */
+.map-hero{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:18px;display:grid;grid-template-columns:130px 1fr;gap:18px;align-items:center;margin-bottom:16px}
+.map-thumb{width:130px;height:86px;background:linear-gradient(135deg,#162820,#2a3820);border:1px solid var(--border);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--lo);font-family:'JetBrains Mono',monospace;text-align:center;line-height:1.5}
+.map-bigname{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;letter-spacing:1.5px;color:var(--hi);line-height:1}
+.map-sub{font-size:12px;color:var(--lo);font-family:'JetBrains Mono',monospace;margin-top:5px}
+.team-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.tbox{border-radius:4px;overflow:hidden;border:1px solid}
+.tbox.r{border-color:#5a1818}
+.tbox.b{border-color:#18245a}
+.tbox-hdr{padding:8px 14px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.tbox.r .tbox-hdr{background:rgba(140,30,30,.25);color:#f0a0a0}
+.tbox.b .tbox-hdr{background:rgba(30,60,140,.25);color:#a0c0f0}
+.tbox-row{padding:7px 14px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;font-size:11px}
+.tbox-row:last-child{border-bottom:none}
+.tbox-row span:first-child{color:var(--mid)}
+.tbox-row span:last-child{font-family:'JetBrains Mono',monospace;color:var(--hi)}
+
+/* ADMIN */
+.admin-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);padding:9px 14px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);border-radius:4px 4px 0 0;display:flex;align-items:center;gap:8px}
+.admin-body{background:var(--bg2);border:1px solid rgba(192,57,43,.2);border-top:none;border-radius:0 0 4px 4px;padding:14px;margin-bottom:16px}
+.aform-row{display:grid;grid-template-columns:170px 1fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.aform-row:last-child{margin-bottom:0}
+.alabel{font-size:11px;color:var(--mid);font-family:'JetBrains Mono',monospace}
+.ainput{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--hi);outline:none;transition:.12s;width:100%}
+.ainput:focus{border-color:var(--acc2)}
+.abtn{padding:6px 14px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:none;transition:.15s;cursor:pointer;white-space:nowrap}
+.abtn.danger{background:rgba(192,57,43,.15);border:1px solid rgba(192,57,43,.4);color:#e08080}
+.abtn.danger:hover{background:rgba(192,57,43,.3)}
+.abtn.primary{background:var(--acc-glow);border:1px solid var(--acc2);color:var(--acc)}
+.abtn.primary:hover{background:rgba(224,136,32,.25)}
+.abtn.safe{background:rgba(34,168,90,.1);border:1px solid rgba(34,168,90,.3);color:var(--green)}
+.abtn.safe:hover{background:rgba(34,168,90,.2)}
+.log-box{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.8;max-height:160px;overflow-y:auto}
+.log-ok{color:var(--green)}
+.log-err{color:var(--red)}
+.log-info{color:var(--acc)}
+.log-dim{color:var(--lo)}
+.ban-row{display:grid;grid-template-columns:1fr 1fr auto auto;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--border2);font-size:11px}
+.ban-row:last-child{border-bottom:none}
+.ban-hdr-row{background:var(--bg3);border-bottom:1px solid var(--border)}
+
+/* MEDAL SVG */
+.medal-svg{flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));transition:transform .2s}
+.pcard:hover .medal-svg{transform:translateY(-2px) scale(1.04)}
+/* PODIUM update - align medal vertically */
+.pcard{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:14px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+.pcard::after{content:attr(data-n);position:absolute;right:8px;bottom:-16px;font-family:'Rajdhani',sans-serif;font-size:80px;font-weight:700;opacity:.05;color:#fff;line-height:1;pointer-events:none}
+.pcard:hover{border-color:var(--acc2);background:var(--bg4)}
+.pcard.p1{border-top:2px solid var(--yellow)}
+.pcard.p2{border-top:2px solid var(--silver)}
+.pcard.p3{border-top:2px solid var(--bronze)}
+
+/* LIVE SCOREBOARD */
+.live-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;padding:10px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mid)}
+.live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:blink 1.4s infinite;flex-shrink:0}
+.live-dot.offline{background:var(--red);animation:none}
+.live-teams{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.team-panel{border-radius:4px;overflow:hidden;border:1px solid}
+.team-panel.us{border-color:#1e3a6e;background:rgba(20,40,100,.18)}
+.team-panel.nva{border-color:#6e2a00;background:rgba(100,50,0,.18)}
+.team-panel-hdr{padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.team-panel.us .team-panel-hdr{background:rgba(30,60,160,.25);border-bottom:1px solid rgba(30,60,160,.4)}
+.team-panel.nva .team-panel-hdr{background:rgba(160,60,0,.25);border-bottom:1px solid rgba(160,60,0,.4)}
+.team-name{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.team-panel.us .team-name{color:#80b0f0}
+.team-panel.nva .team-name{color:#f0a060}
+.team-tickets{font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;line-height:1;margin-top:4px}
+.team-panel.us .team-tickets{color:#a0c8ff}
+.team-panel.nva .team-tickets{color:#ffb060}
+.ticket-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lo);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.winning-badge{padding:3px 10px;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.team-panel.us .winning-badge{background:rgba(30,60,160,.4);border:1px solid rgba(60,100,240,.5);color:#80b0ff}
+.team-panel.nva .winning-badge{background:rgba(160,60,0,.4);border:1px solid rgba(240,100,20,.5);color:#ffb060}
+.live-player-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.live-player-tbl thead tr{background:rgba(0,0,0,.2);border-bottom:1px solid rgba(255,255,255,.05)}
+.live-player-tbl thead th{padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);text-align:right}
+.live-player-tbl thead th:first-child{text-align:left}
+.live-player-tbl tbody tr{border-bottom:1px solid rgba(255,255,255,.04);transition:.1s;cursor:pointer}
+.live-player-tbl tbody tr:hover{background:rgba(255,255,255,.04)}
+.live-player-tbl tbody td{padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mid);text-align:right}
+.live-player-tbl tbody td:first-child{text-align:left;color:var(--hi);font-size:11px;font-weight:500}
+.live-player-tbl .total-row{background:rgba(0,0,0,.2);border-top:1px solid rgba(255,255,255,.08)}
+.live-player-tbl .total-row td{color:var(--mid);font-size:10px}
+.live-sort-tabs{display:flex;gap:1px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.live-sort-tab{padding:6px 14px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);cursor:pointer;border-bottom:2px solid transparent;position:relative;top:1px;transition:.12s}
+.live-sort-tab:hover{color:var(--mid)}
+.live-sort-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.round-hist-hdr{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--mid);padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border)}
+.rh-row{display:grid;grid-template-columns:1fr 110px 80px 70px 100px;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border2);font-size:11px;cursor:pointer;transition:.1s}
+.rh-row:last-child{border-bottom:none}
+.rh-row:hover{background:var(--bg4)}
+.rh-row-hdr{background:var(--bg3);border-bottom:1px solid var(--border);cursor:default}
+.rh-row-hdr:hover{background:var(--bg3)}
+.rh-map{color:var(--hi);font-size:12px;font-weight:600}
+.rh-time{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lo)}
+.rh-dur{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mid);text-align:center}
+.rh-players{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lo);text-align:center}
+.rh-when{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lo);text-align:right}
+.winner-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.winner-pill.us{background:rgba(30,60,160,.2);border:1px solid rgba(30,60,160,.5);color:#80b0ff}
+.winner-pill.nva{background:rgba(160,60,0,.2);border:1px solid rgba(160,60,0,.5);color:#ffb060}
+.winner-pill.draw{background:rgba(100,100,100,.15);border:1px solid var(--border);color:var(--mid)}
+/* DETAIL GRIDS — overrideable by media queries */
+.detail-two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:14px}
+.detail-two-col>*{min-width:0}
+.game-detail-grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:14px;margin-bottom:14px}
+.game-detail-grid>*{min-width:0}
+
+/* ═══════════════════════════════════
+   RESPONSIVE — MOBILE & TABLET
+═══════════════════════════════════ */
+
+/* Tablet — up to 1024px */
+@media (max-width:1024px) {
+  .two-col{grid-template-columns:1fr}
+  .podium{gap:8px}
+  .team-split{grid-template-columns:1fr 1fr}
+  .ticket-grid{grid-template-columns:1fr 1fr}
+  .live-teams{grid-template-columns:1fr 1fr}
+  .pp-hero{grid-template-columns:56px 1fr}
+  .pp-kpis{flex-wrap:wrap}
+  .pkpi{padding:0 10px}
+  .map-hero{grid-template-columns:100px 1fr;gap:12px}
+  .map-thumb{width:100px;height:66px}
+  .team-stats-grid{grid-template-columns:1fr 1fr}
+}
+
+/* Mobile — up to 768px */
+@media (max-width:768px) {
+  /* TOPBAR */
+  .topbar{flex-wrap:wrap;height:auto;padding:8px 12px;gap:6px}
+  .logo{margin-right:0}
+  nav{order:2;width:100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px;
+      scrollbar-width:none;-ms-overflow-style:none}
+  nav::-webkit-scrollbar{display:none}
+  nav a{padding:4px 10px;font-size:10px;white-space:nowrap;flex-shrink:0}
+  .server-pill{order:3;width:100%;font-size:9px;padding:4px 10px;margin-left:0;justify-content:center}
+  .server-pill .pill-addr{display:none}
+  .server-pill .pill-name{display:none}
+
+  /* HERO */
+  .hero{flex-direction:column;align-items:flex-start;gap:10px;padding:12px 14px}
+  .hero::before{display:none}
+  .hero-stats{flex-wrap:wrap;gap:0}
+  .hstat{padding:4px 12px;border-right:none;border-bottom:1px solid var(--border)}
+  .hstat:nth-child(odd){border-right:1px solid var(--border)}
+  .hstat-v{font-size:18px}
+  .hero-meta{text-align:left;font-size:9px}
+
+  /* PAGE */
+  .page{padding:12px 12px}
+
+  /* PODIUM — single column */
+  .podium{grid-template-columns:1fr;gap:8px}
+  .pcard{padding:10px 12px;gap:10px}
+  .pcard::after{display:none}
+  .medal-svg{width:44px;height:56px}
+  .pn{font-size:13px}
+  .ps{gap:10px}
+  .ps-v{font-size:11px}
+  .ps-l{font-size:8px}
+
+  /* SECTION TITLE + TABS */
+  .stitle{font-size:13px;letter-spacing:2px;margin-bottom:8px}
+  .tabs{margin-bottom:8px}
+  .tab{padding:6px 10px;font-size:10px;letter-spacing:1px}
+
+  /* SEARCH ROW */
+  .srow{flex-wrap:wrap;gap:6px}
+  .srow .s-input{width:100%;flex:none}
+
+  /* TABLES — horizontal scroll */
+  .tbl-wrap{display:block;overflow:auto;overflow-x:scroll;-webkit-overflow-scrolling:touch;width:100%;max-width:100%;box-sizing:border-box}
+  .card{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:300px}
+  thead th{padding:7px 8px;font-size:8px}
+  tbody td{padding:6px 8px;font-size:10px}
+
+  /* PAGINATION */
+  .pag{flex-direction:column;gap:8px;align-items:flex-start}
+
+  /* TWO-COL — single column */
+  .two-col{grid-template-columns:1fr}
+
+  /* PLAYER PROFILE */
+  .pp-hero{grid-template-columns:1fr;gap:10px}
+  .pp-big-av{display:none}
+  .pp-name{font-size:20px}
+  .pp-kpis{flex-wrap:wrap}
+  .pkpi{padding:4px 10px;min-width:80px}
+  .pkpi-v{font-size:16px}
+
+  /* DETAIL GRIDS */
+  .detail-two-col{grid-template-columns:1fr}
+  .game-detail-grid{grid-template-columns:1fr}
+
+  /* DROW label + value */
+  .drow{grid-template-columns:130px 1fr}
+  .dk{font-size:10px}
+  .dv{font-size:11px}
+
+  /* CARD HDR */
+  .card-hdr{flex-direction:column;align-items:flex-start;gap:3px;padding:8px 12px}
+
+  /* BACK BTN */
+  .back-btn{font-size:10px;padding:4px 10px;margin-bottom:10px}
+
+  /* GAME DETAIL — stacked */
+  .ticket-grid{grid-template-columns:1fr;gap:8px}
+  .team-split{grid-template-columns:1fr;gap:8px}
+  .round-body{padding:10px}
+  .round-hdr{flex-direction:column;align-items:flex-start;gap:4px;padding:8px 12px}
+  .round-time{font-size:9px}
+
+  /* MAP PAGE */
+  .map-hero{grid-template-columns:1fr;gap:10px}
+  .map-thumb{width:100%;height:80px}
+  .map-bigname{font-size:20px}
+  .team-stats-grid{grid-template-columns:1fr;gap:8px}
+
+  /* LIVE SCOREBOARD */
+  .live-header{flex-wrap:wrap;gap:6px;padding:8px 12px;font-size:10px}
+  .live-teams{grid-template-columns:1fr;gap:10px}
+  .team-tickets{font-size:22px}
+  .live-player-tbl thead th{font-size:8px;padding:5px 6px}
+  .live-player-tbl tbody td{font-size:9px;padding:5px 6px}
+  .live-sort-tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+  .live-sort-tab{white-space:nowrap;font-size:9px;padding:5px 10px}
+  .rh-row{grid-template-columns:1fr auto;gap:6px}
+  .rh-dur,.rh-players,.rh-when{display:none}
+
+  /* ADMIN */
+  .aform-row{grid-template-columns:1fr;gap:6px}
+  .aform-row .abtn{width:fit-content}
+  .ban-row{grid-template-columns:1fr auto;gap:8px}
+  .ban-row > div:nth-child(2),
+  .ban-row > div:nth-child(3){display:none}
+  .ban-hdr-row > div:nth-child(2),
+  .ban-hdr-row > div:nth-child(3){display:none}
+  .admin-body{padding:10px}
+
+  /* FOOTER */
+  footer{font-size:9px;letter-spacing:0.5px;line-height:1.9;padding:10px 12px}
+}
+
+/* Small phones — up to 480px */
+@media (max-width:480px) {
+  .podium{gap:6px}
+  .pcard{padding:8px 10px;gap:8px}
+  .medal-svg{width:36px;height:46px}
+  .pn{font-size:12px}
+  .ps{gap:6px}
+  .ps-v{font-size:10px}
+  .hstat-v{font-size:16px}
+  .hstat{padding:3px 8px}
+  .server-pill{font-size:8px}
+  .pp-kpis{gap:0}
+  .pkpi{min-width:70px;padding:4px 8px}
+  .pkpi-v{font-size:14px}
+  .pkpi-l{font-size:8px}
+  /* hide repair + heal cols on tiny screens to save space */
+  thead th:nth-child(12),
+  thead th:nth-child(13),
+  tbody td:nth-child(12),
+  tbody td:nth-child(13){display:none}
+}
+
+/* GLOW LINE / FOOTER */
+footer{text-align:center;padding:12px;font-size:10px;color:var(--lo);font-family:'JetBrains Mono',monospace;letter-spacing:1px;border-top:1px solid var(--border);margin-top:20px}
+footer span{color:var(--acc2)}
+
+/* FLAG MINI */
+.fl{display:inline-block;width:14px;height:10px;border-radius:1px;vertical-align:middle;margin-right:3px;font-size:0;overflow:hidden}
+.fl-us{background:linear-gradient(to bottom,#b22234 33%,#fff 33%,#fff 66%,#3c3b6e 66%);border:1px solid rgba(255,255,255,.15)}
+.fl-nva{background:linear-gradient(to bottom,#da291c 33%,#ffd700 33%,#ffd700 66%,#da291c 66%)}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo" onclick="nav('players')" style="cursor:pointer">
+    <img src="/gmv-logo.png" alt="GmV" style="width:32px;height:32px;object-fit:contain">
+    <div class="logo-text">GmV <span>STATS</span></div>
+  </div>
+  <nav>
+    <a onclick="nav('players')" id="nav-players" class="active">Players</a>
+    <a onclick="nav('live')" id="nav-live">Live Scoreboard</a>
+    <a onclick="nav('weapons')" id="nav-weapons">Weapons</a>
+    <a onclick="nav('vehicles')" id="nav-vehicles">Vehicles</a>
+    <a onclick="nav('maps')" id="nav-maps">Maps</a>
+    <a onclick="nav('games')" id="nav-games">Games</a>
+    <a onclick="nav('search')" id="nav-search">Search</a>
+    <a onclick="nav('chars')" id="nav-chars">Characters</a>
+    <a href="https://forum.gmvclan.com/" target="_blank" rel="noopener">Forum</a>
+    <a onclick="nav('admin')" id="nav-admin" style="color:var(--red)">Admin</a>
+  </nav>
+  <div class="server-pill">
+    <div class="dot"></div>
+    <span class="pill-name">-{GmV}- AIR WARS</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">10.0.0.70:15567</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
+  </div>
+</header>
+
+<!-- HERO STRIP -->
+<div class="hero">
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-v" id="hero-players">—</div><div class="hstat-l">Players</div></div>
+    <div class="hstat"><div class="hstat-v" id="hero-games">—</div><div class="hstat-l">Games</div></div>
+    <div class="hstat"><div class="hstat-v" id="hero-kills">—</div><div class="hstat-l">Total Kills</div></div>
+    
+    <div class="hstat"><div class="hstat-v" id="hero-online" style="color:var(--lo)">—</div><div class="hstat-l">Online Now</div></div>
+  </div>
+  <div class="hero-meta" id="hero-meta">
+    <div>Last game: <strong id="hero-lastgame">—</strong></div>
+    <div>Server: <strong id="hero-server">—</strong></div>
+    <div id="hero-status" style="color:var(--lo)">● Offline</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: PLAYERS / RANKINGS
+═══════════════════════════════════════ -->
+<div class="page visible" id="page-players">
+  <div class="bc"><span class="cur">Players</span><span class="bc-sep">›</span><span class="cur">Rankings</span></div>
+
+  <!-- Podium -->
+  <div class="podium">
+    <div class="pcard p1" data-n="1" onclick="showPlayer('Rbilly')">
+      <svg class="medal-svg" viewBox="0 0 56 72" width="56" height="72" xmlns="http://www.w3.org/2000/svg">
+        <!-- ribbon left -->
+        <polygon points="16,0 28,0 28,30 10,42" fill="#7a1010"/>
+        <!-- ribbon right -->
+        <polygon points="28,0 40,0 46,42 28,30" fill="#a01818"/>
+        <!-- ribbon shine -->
+        <polygon points="22,0 28,0 28,30 18,36" fill="rgba(255,255,255,0.08)"/>
+        <!-- circle shadow -->
+        <circle cx="28" cy="50" r="20" fill="rgba(0,0,0,0.35)"/>
+        <!-- circle base -->
+        <circle cx="28" cy="48" r="20" fill="url(#goldGrad)"/>
+        <!-- circle inner ring -->
+        <circle cx="28" cy="48" r="16" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+        <!-- star burst -->
+        <circle cx="28" cy="48" r="13" fill="url(#goldInner)"/>
+        <!-- rank number -->
+        <text x="28" y="54" text-anchor="middle" font-family="'Rajdhani',sans-serif" font-size="16" font-weight="700" fill="#5a3000">1</text>
+        <defs>
+          <radialGradient id="goldGrad" cx="40%" cy="35%">
+            <stop offset="0%" stop-color="#ffe066"/>
+            <stop offset="50%" stop-color="#f0c030"/>
+            <stop offset="100%" stop-color="#a07010"/>
+          </radialGradient>
+          <radialGradient id="goldInner" cx="35%" cy="30%">
+            <stop offset="0%" stop-color="#fff0a0"/>
+            <stop offset="100%" stop-color="#d4a010"/>
+          </radialGradient>
+        </defs>
+      </svg>
+      <div class="pi">
+        <div class="pn">↑ Rbilly ▼</div>
+        <div class="ps">
+          <div><div class="ps-v">156,468</div><div class="ps-l">Score</div></div>
+          <div><div class="ps-v">66,765</div><div class="ps-l">Kills</div></div>
+          <div><div class="ps-v">26.33</div><div class="ps-l">S/R</div></div>
+          <div><div class="ps-v">1.178</div><div class="ps-l">K/D</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="pcard p2" data-n="2" onclick="showPlayer('Nagi Tanka')">
+      <svg class="medal-svg" viewBox="0 0 56 72" width="56" height="72" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="16,0 28,0 28,30 10,42" fill="#1a2060"/>
+        <polygon points="28,0 40,0 46,42 28,30" fill="#2a30a0"/>
+        <polygon points="22,0 28,0 28,30 18,36" fill="rgba(255,255,255,0.08)"/>
+        <circle cx="28" cy="50" r="20" fill="rgba(0,0,0,0.35)"/>
+        <circle cx="28" cy="48" r="20" fill="url(#silvGrad)"/>
+        <circle cx="28" cy="48" r="16" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+        <circle cx="28" cy="48" r="13" fill="url(#silvInner)"/>
+        <text x="28" y="54" text-anchor="middle" font-family="'Rajdhani',sans-serif" font-size="16" font-weight="700" fill="#304050">2</text>
+        <defs>
+          <radialGradient id="silvGrad" cx="40%" cy="35%">
+            <stop offset="0%" stop-color="#e8f0f8"/>
+            <stop offset="50%" stop-color="#98b0c0"/>
+            <stop offset="100%" stop-color="#506070"/>
+          </radialGradient>
+          <radialGradient id="silvInner" cx="35%" cy="30%">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="100%" stop-color="#7090a8"/>
+          </radialGradient>
+        </defs>
+      </svg>
+      <div class="pi">
+        <div class="pn">↑ Nagi Tanka</div>
+        <div class="ps">
+          <div><div class="ps-v">129,110</div><div class="ps-l">Score</div></div>
+          <div><div class="ps-v">63,616</div><div class="ps-l">Kills</div></div>
+          <div><div class="ps-v">20.69</div><div class="ps-l">S/R</div></div>
+          <div><div class="ps-v kn">0.773</div><div class="ps-l">K/D</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="pcard p3" data-n="3" onclick="showPlayer('-=Int.]-[=- rick')">
+      <svg class="medal-svg" viewBox="0 0 56 72" width="56" height="72" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="16,0 28,0 28,30 10,42" fill="#1a3a10"/>
+        <polygon points="28,0 40,0 46,42 28,30" fill="#2a5a18"/>
+        <polygon points="22,0 28,0 28,30 18,36" fill="rgba(255,255,255,0.08)"/>
+        <circle cx="28" cy="50" r="20" fill="rgba(0,0,0,0.35)"/>
+        <circle cx="28" cy="48" r="20" fill="url(#bronzeGrad)"/>
+        <circle cx="28" cy="48" r="16" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+        <circle cx="28" cy="48" r="13" fill="url(#bronzeInner)"/>
+        <text x="28" y="54" text-anchor="middle" font-family="'Rajdhani',sans-serif" font-size="16" font-weight="700" fill="#3a1800">3</text>
+        <defs>
+          <radialGradient id="bronzeGrad" cx="40%" cy="35%">
+            <stop offset="0%" stop-color="#e8a060"/>
+            <stop offset="50%" stop-color="#b87040"/>
+            <stop offset="100%" stop-color="#703010"/>
+          </radialGradient>
+          <radialGradient id="bronzeInner" cx="35%" cy="30%">
+            <stop offset="0%" stop-color="#ffc890"/>
+            <stop offset="100%" stop-color="#904020"/>
+          </radialGradient>
+        </defs>
+      </svg>
+      <div class="pi">
+        <div class="pn">↑ -=Int.]-[=- rick</div>
+        <div class="ps">
+          <div><div class="ps-v">128,335</div><div class="ps-l">Score</div></div>
+          <div><div class="ps-v">82,589</div><div class="ps-l">Kills</div></div>
+          <div><div class="ps-v">35.46</div><div class="ps-l">S/R</div></div>
+          <div><div class="ps-v kp">2.009</div><div class="ps-l">K/D</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle">All Players</div>
+  <div class="tabs">
+    <div class="tab active" onclick="setRankPeriod('all')">All Time</div>
+    <div class="tab" onclick="setRankPeriod('month')">This Month</div>
+    <div class="tab" onclick="setRankPeriod('week')">This Week</div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="tbl-wrap">
+        <div class="srow">
+          <input class="s-input" style="flex:1" type="text" placeholder="Search player name..." oninput="onRankSearch(this.value)">
+          <button class="fbtn on" onclick="setRankFilter('all',this)">All</button>
+          <button class="fbtn" onclick="setRankFilter('top50',this)">Top 50</button>
+          <button class="fbtn" onclick="setRankFilter('clan',this)">Clan</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th class="tl" style="width:36px">#</th>
+            <th class="tl">Player</th>
+            <th class="sa" id="th-score" style="cursor:pointer" onclick="setRankSort('score')">Score ↓</th>
+            <th>S/R</th>
+            <th style="cursor:pointer" onclick="setRankSort('kills')">Kills</th>
+            <th style="cursor:pointer" onclick="setRankSort('deaths')">Deaths</th>
+            <th style="cursor:pointer" onclick="setRankSort('kd')">K/D</th>
+            <th style="cursor:pointer" onclick="setRankSort('tks')">TKs</th>
+            <th title="Gold Awards">🥇</th>
+            <th title="Silver Awards">🥈</th>
+            <th title="Bronze Awards">🥉</th>
+            <th title="Repairs">🔧</th>
+            <th title="Heals">💊</th>
+            <th style="cursor:pointer" onclick="setRankSort('rounds')">Rounds</th>
+          </tr></thead>
+          <tbody id="rank-tbody"></tbody>
+        </table>
+        <div class="pag">
+          <span id="pag-info">Showing 1–22 of 2,841</span>
+          <div class="pag-btns" id="pag-btns"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div>
+      <div class="widget">
+        <div class="wh">Recent Games</div>
+        <div id="sidebar-games"></div>
+      </div>
+      <div class="widget">
+        <div class="wh">Top Weapons (Global)</div>
+        <div id="sidebar-weapons"></div>
+      </div>
+      <div class="widget">
+        <div class="wh">Map Win Rates (US/ARVN)</div>
+        <div id="sidebar-maps"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: PLAYER PROFILE
+═══════════════════════════════════════ -->
+<div class="page" id="page-player">
+  <div class="bc"><span onclick="nav('players')">Players</span><span class="bc-sep">›</span><span class="cur" id="bc-pname">Player</span></div>
+  <button class="back-btn" onclick="nav('players')">← Back to Rankings</button>
+
+  <div class="pp-hero">
+    <div class="pp-big-av" id="pp-av">N</div>
+    <div class="pp-info">
+      <div class="pp-name" id="pp-name">Nagi Tanka</div>
+      <div class="pp-sub" id="pp-sub">Last seen: 2024-04-14 22:59:00 · Rank #2</div>
+      <div class="pp-kpis" id="pp-kpis"></div>
+    </div>
+  </div>
+
+  <div class="detail-two-col">
+    <div class="card">
+      <div class="card-hdr">Player Details</div>
+      <div class="drow"><div class="dk">Playername</div><div class="dv" id="pp-dname">Nagi Tanka</div></div>
+      <div class="drow"><div class="dk">Last Seen</div><div class="dv" id="pp-dseen">2024-04-14 22:59:00</div></div>
+      <div class="drow"><div class="dk">Rounds Played</div><div class="dv" id="pp-drounds">6,241</div></div>
+      <div class="drow"><div class="dk">Total Score</div><div class="dv" id="pp-dscore">129,110</div></div>
+      <div class="drow"><div class="dk">Total Kills</div><div class="dv" id="pp-dkills">63,616</div></div>
+      <div class="drow"><div class="dk">Total Deaths</div><div class="dv" id="pp-ddeaths">82,311</div></div>
+      <div class="drow"><div class="dk">K/D Ratio</div><div class="dv" id="pp-dkd">0.773</div></div>
+      <div class="drow"><div class="dk">Total TKs</div><div class="dv" id="pp-dtks" style="color:var(--red)">4,194</div></div>
+      <div class="drow"><div class="dk">Score / Round</div><div class="dv" id="pp-dsr">20.69</div></div>
+      <div class="drow"><div class="dk">Awards</div><div class="dv" id="pp-dawards"></div></div>
+      <div class="drow"><div class="dk">🔧 Repairs</div><div class="dv" id="pp-drepairs">5min 42.66sec on 11,679 pts</div></div>
+      <div class="drow"><div class="dk">💊 Self Heals</div><div class="dv" id="pp-dheal-self">0.00 sec</div></div>
+      <div class="drow"><div class="dk">💊 Team Heals</div><div class="dv" id="pp-dheal-team">0.00 sec</div></div>
+    </div>
+
+    <!-- Nicknames + Character Types -->
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-hdr">
+          <span>Nicknames</span>
+          <span style="font-size:9px;font-weight:400;color:var(--lo);letter-spacing:0.5px;text-transform:none;font-family:'JetBrains Mono',monospace">Tracked by CD-KEY — all names shown</span>
+        </div>
+        <table>
+          <thead><tr><th class="tl">#</th><th class="tl">Nickname</th><th>Usage</th><th style="width:120px"></th></tr></thead>
+          <tbody id="pp-nicknames"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-hdr">Character Types</div>
+        <table>
+          <thead><tr><th class="tl">#</th><th class="tl">Type</th><th>Usage</th><th style="width:100px"></th></tr></thead>
+          <tbody id="pp-chartypes"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weapons -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr">Weapons</div>
+    <table>
+      <thead><tr><th class="tl">#</th><th class="tl">Weapon</th><th>Kills</th><th>%</th><th style="width:220px"></th></tr></thead>
+      <tbody id="pp-weapons-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Vehicle Time -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr">Vehicle Time</div>
+    <table>
+      <thead><tr><th class="tl">#</th><th class="tl">Vehicle</th><th>Time</th><th>%</th><th style="width:220px"></th></tr></thead>
+      <tbody id="pp-vehicles-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Top Victims + Top Assassins -->
+  <div class="detail-two-col">
+    <div class="card">
+      <div class="card-hdr">Top Victims (players I killed most)</div>
+      <table>
+        <thead><tr><th class="tl">#</th><th class="tl">Player</th><th>Kills</th><th>%</th><th style="width:100px"></th></tr></thead>
+        <tbody id="pp-victims-tbody"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-hdr">Top Assassins (players who killed me most)</div>
+      <table>
+        <thead><tr><th class="tl">#</th><th class="tl">Player</th><th>Kills</th><th>%</th><th style="width:100px"></th></tr></thead>
+        <tbody id="pp-assassins-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Map Performance -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr">Map Performance</div>
+    <table>
+      <thead><tr><th class="tl">#</th><th class="tl" style="width:30px"></th><th class="tl">Map</th><th>Score</th><th>%</th><th style="width:220px"></th></tr></thead>
+      <tbody id="pp-mapperf-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- Last Games (player specific - with Score/Kills/Deaths per round) -->
+  <div class="card">
+    <div class="card-hdr">Last Games</div>
+    <table>
+      <thead><tr>
+        <th class="tl">Game Started</th>
+        <th class="tl">Server</th>
+        <th class="tl">Mod</th>
+        <th class="tl">Map</th>
+        <th>Mode</th>
+        <th>Score</th>
+        <th>Kills</th>
+        <th>Deaths</th>
+      </tr></thead>
+      <tbody id="pp-lastgames-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: GAME DETAIL
+═══════════════════════════════════════ -->
+<div class="page" id="page-game">
+  <div class="bc"><span onclick="nav('games')">Games</span><span class="bc-sep">›</span><span class="cur" id="bc-gname">Game #25099</span></div>
+  <button class="back-btn" onclick="nav('games')">← Back to Games</button>
+
+  <div id="game-detail-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: MAP DETAIL
+═══════════════════════════════════════ -->
+<div class="page" id="page-map">
+  <div class="bc"><span onclick="nav('maps')">Maps</span><span class="bc-sep">›</span><span class="cur" id="bc-mapname">Operation Hastings</span></div>
+  <button class="back-btn" onclick="nav('maps')">← Back to Maps</button>
+
+  <div id="map-detail-content"></div>
+
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: GAMES LIST
+═══════════════════════════════════════ -->
+<div class="page" id="page-games">
+  <div class="bc"><span class="cur">Games</span></div>
+  <div class="stitle">Last Games</div>
+  <div class="tbl-wrap">
+    <div id="games-list"></div>
+    <div class="pag"><span id="games-pag-info"></span><div class="pag-btns" id="games-pag-btns"></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: MAPS LIST
+═══════════════════════════════════════ -->
+<div class="page" id="page-maps">
+  <div class="bc"><span class="cur">Maps</span></div>
+  <div class="stitle">Map Statistics</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th class="tl">#</th>
+        <th class="tl">Map</th>
+        <th>Rounds</th>
+        <th style="color:#f0a0a0">Red Wins</th>
+        <th style="color:#a0c0f0">Blue Wins</th>
+        <th>Win % (Red)</th>
+        <th>Total Kills</th>
+        <th style="width:200px"></th>
+      </tr></thead>
+      <tbody id="maps-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: CLANS
+═══════════════════════════════════════ -->
+<div class="page" id="page-clans">
+  <div class="bc"><span class="cur">Clans</span></div>
+  <div class="stitle">Clan Rankings</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="tl">#</th><th class="tl">Clan Tag</th><th class="tl">Clan Name</th><th>Members</th><th>Total Score</th><th>Avg K/D</th><th>Total Rounds</th></tr></thead>
+      <tbody>
+        <tr onclick="nav('players')"><td class="tl"><span class="rn g">1</span></td><td class="tl hi">[TKO]</td><td class="tl">Team Killzone Operators</td><td>8</td><td>320,441</td><td class="kp">1.44</td><td>24,102</td></tr>
+        <tr onclick="nav('players')"><td class="tl"><span class="rn s">2</span></td><td class="tl hi">=KGC=</td><td class="tl">KGC Clan</td><td>3</td><td>198,200</td><td class="kp">1.21</td><td>12,840</td></tr>
+        <tr onclick="nav('players')"><td class="tl"><span class="rn b">3</span></td><td class="tl hi">-[HELLO]-</td><td class="tl">HelloClan</td><td>5</td><td>155,300</td><td>1.02</td><td>9,200</td></tr>
+        <tr onclick="nav('players')"><td class="tl"><span class="rn">4</span></td><td class="tl hi">♦.BR.</td><td class="tl">Brazil Squad</td><td>2</td><td>95,100</td><td>1.05</td><td>7,400</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: CHARACTER TYPES
+═══════════════════════════════════════ -->
+<div class="page" id="page-chars">
+  <div class="bc"><span class="cur">Character Types</span></div>
+  <div class="stitle">Character Type Usage (Global)</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="tl">#</th><th class="tl">Character Type</th><th>Total Usage</th><th>%</th><th style="width:200px"></th></tr></thead>
+      <tbody id="chars-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: WEAPONS (GLOBAL)
+═══════════════════════════════════════ -->
+<div class="page" id="page-weapons">
+  <div class="bc"><span class="cur">Weapons</span></div>
+  <div class="stitle">Global Weapon Statistics</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="tl">#</th><th class="tl">Weapon</th><th>Total Kills</th><th>%</th><th style="width:250px"></th></tr></thead>
+      <tbody id="weapons-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: VEHICLES (GLOBAL)
+═══════════════════════════════════════ -->
+<div class="page" id="page-vehicles">
+  <div class="bc"><span class="cur">Vehicles</span></div>
+  <div class="stitle">Vehicle Time Statistics (Global)</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="tl">#</th><th class="tl">Vehicle</th><th>Total Time</th><th>% of Playtime</th><th style="width:250px"></th></tr></thead>
+      <tbody id="vehicles-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: SEARCH
+═══════════════════════════════════════ -->
+<div class="page" id="page-search">
+  <div class="bc"><span class="cur">Search</span></div>
+  <div class="stitle">Search Players &amp; Games</div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-hdr">Search for Players</div>
+    <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;align-items:end;flex-wrap:wrap">
+      <div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Player Name</div>
+        <input class="s-input" style="width:100%" type="text" id="s-name" placeholder="Player name...">
+      </div>
+      <div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Server Name</div>
+        <input class="s-input" style="width:100%" type="text" id="s-server" placeholder="Server name...">
+      </div>
+      <div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Day</div>
+        <select class="s-select" style="width:100%" id="s-day"><option value="">— Any —</option></select>
+      </div>
+      <div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Month</div>
+        <select class="s-select" style="width:100%" id="s-month"><option value="">— Any —</option></select>
+      </div>
+      <div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Year</div>
+        <select class="s-select" style="width:100%" id="s-year"><option value="">— Any —</option></select>
+      </div>
+    </div>
+    <div style="padding:0 16px 16px;display:flex;gap:10px;align-items:center">
+      <div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Mod</div>
+        <select class="s-select">
+          <option>bfvietnam</option><option>bf1942</option><option>Any</option>
+        </select>
+      </div>
+      <button class="fbtn on" style="margin-top:18px" id="s-btn" onclick="doSearch()">Search</button>
+      <button class="fbtn" style="margin-top:18px" onclick="nav('players')">Reset</button>
+    </div>
+  </div>
+
+  <div class="stitle">Search Results</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th class="tl">#</th>
+        <th class="tl">Player</th>
+        <th class="sa">Score</th>
+        <th>S/R</th>
+        <th>Kills</th>
+        <th>Deaths</th>
+        <th>K/D</th>
+        <th>TKs</th>
+        <th>Rounds</th>
+      </tr></thead>
+      <tbody id="search-tbody"></tbody>
+    </table>
+    <div class="pag"><span id="search-info"></span><div class="pag-btns"></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: ADMIN
+═══════════════════════════════════════ -->
+<div class="page" id="page-admin">
+  <div class="bc"><span class="cur" style="color:var(--red)">Admin Panel</span></div>
+
+  <div id="admin-login-section">
+    <div class="card" style="max-width:380px;margin:40px auto">
+      <div class="card-hdr">Admin Login</div>
+      <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:11px;color:var(--lo);font-family:'JetBrains Mono',monospace">Enter admin password to continue</div>
+        <input class="ainput" type="password" id="admin-pw-input" placeholder="Password…" onkeydown="if(event.key==='Enter')adminLogin()">
+        <button class="abtn primary" id="admin-login-btn" onclick="adminLogin()">Login</button>
+        <div id="admin-login-err" style="color:var(--red);font-size:11px;min-height:16px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-panel-section" style="display:none">
+    <div style="background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.3);border-radius:4px;padding:11px 16px;margin-bottom:14px;font-size:12px;color:#e09080;display:flex;align-items:center;gap:10px">
+      <span style="font-size:18px">🔒</span>
+      <span>Restricted access. All actions take effect on the live database immediately.</span>
+      <button class="abtn safe" style="margin-left:auto;padding:4px 12px" onclick="adminLogout()">Logout</button>
+    </div>
+
+    <div class="admin-title">🚫 Ban Player</div>
+    <div class="admin-body">
+      <div class="aform-row">
+        <div class="alabel">Player Name</div>
+        <input class="ainput" type="text" id="ban-name" placeholder="Player name…" style="flex:1">
+        <button class="abtn danger" id="ban-btn" onclick="adminBan()">Ban Player</button>
+      </div>
+      <div class="aform-row">
+        <div class="alabel">Reason</div>
+        <input class="ainput" type="text" id="ban-reason" placeholder="Reason for ban…" style="flex:1">
+        <div></div>
+      </div>
+    </div>
+
+    <div class="admin-title">📋 Current Bans</div>
+    <div id="ban-list" class="admin-body" style="padding:0">
+      <div style="padding:12px;color:var(--lo);font-family:'JetBrains Mono',monospace;font-size:11px">Loading…</div>
+    </div>
+
+    <div class="admin-title" style="margin-top:16px">🏷️ Clan Tags</div>
+    <div class="admin-body">
+      <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:10px">Players whose names contain a clan tag will appear under the <strong>Clan</strong> filter on the rankings page.</div>
+      <div class="aform-row">
+        <div class="alabel">New Tag</div>
+        <input class="ainput" type="text" id="clan-tag-input" placeholder="e.g. -{GmV}-" style="flex:1">
+        <button class="abtn primary" onclick="adminAddClanTag()">Add</button>
+      </div>
+      <div id="clan-tag-list" style="margin-top:10px"></div>
+    </div>
+
+    <div class="admin-title" style="margin-top:16px">🔑 Change Admin Password</div>
+    <div class="admin-body">
+      <div class="aform-row">
+        <div class="alabel">New Password</div>
+        <input class="ainput" type="password" id="admin-pw-new" placeholder="New password…" style="flex:1">
+        <button class="abtn primary" id="admin-pw-btn" onclick="adminChangePassword()">Update</button>
+      </div>
+    </div>
+
+    <div class="admin-title" style="margin-top:16px">⚙️ Log Parser</div>
+    <div class="admin-body">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="abtn primary" id="parser-btn" onclick="adminRunParser()">▶ Run Parser Now</button>
+      </div>
+      <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:8px">Parser log output:</div>
+      <div class="log-box" id="parser-log"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: LIVE SCOREBOARD
+═══════════════════════════════════════ -->
+<div class="page" id="page-live">
+  <div class="bc"><span class="cur">Live Scoreboard</span></div>
+
+  <div class="live-header">
+    <div class="live-dot" id="live-dot"></div>
+    <span id="live-status-text">Connecting to server...</span>
+    <span style="margin-left:auto;color:var(--lo)">Auto-refresh every 5s &nbsp;·&nbsp; </span>
+    <span id="live-last-update" style="color:var(--mid)">—</span>
+  </div>
+
+  <!-- Map + player count banner -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:12px;display:flex;align-items:stretch;overflow:hidden">
+    <img id="live-map-img" src="" alt="" style="width:180px;height:100px;object-fit:cover;display:none;flex-shrink:0">
+    <div style="display:none;width:180px;height:100px;flex-shrink:0;background:linear-gradient(135deg,#162820,#2a3820);align-items:center;justify-content:center" id="live-map-img-fallback"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex:1;padding:10px 16px">
+      <div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--lo);margin-bottom:3px">Current Map</div>
+        <div id="live-map" style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;color:var(--hi)">—</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--lo);margin-bottom:3px">Players</div>
+        <div id="live-players" style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--acc)">0/64</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team panels -->
+  <div class="live-teams">
+    <!-- US Forces -->
+    <div class="team-panel us">
+      <div class="team-panel-hdr">
+        <div>
+          <div class="team-name">US Forces</div>
+          <div id="us-tickets" class="team-tickets">—</div>
+          <div class="ticket-label">tickets remaining</div>
+        </div>
+        <div id="us-winning-badge" class="winning-badge" style="display:none">WINNING</div>
+      </div>
+      <table class="live-player-tbl">
+        <thead><tr>
+          <th>Player</th>
+          <th>Score</th>
+          <th>K</th>
+          <th>D</th>
+          <th>K/D</th>
+          <th>Ping</th>
+        </tr></thead>
+        <tbody id="us-players">
+          <tr><td colspan="6" style="text-align:center;padding:14px;color:var(--lo)">No players</td></tr>
+        </tbody>
+        <tfoot>
+          <tr class="total-row" id="us-totals">
+            <td style="text-align:left;color:var(--lo)">Total</td>
+            <td>0</td><td>0</td><td>0</td><td>∞</td><td>—</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- North Vietnam -->
+    <div class="team-panel nva">
+      <div class="team-panel-hdr">
+        <div>
+          <div class="team-name">North Vietnam</div>
+          <div id="nva-tickets" class="team-tickets">—</div>
+          <div class="ticket-label">tickets remaining</div>
+        </div>
+        <div id="nva-winning-badge" class="winning-badge" style="display:none">WINNING</div>
+      </div>
+      <table class="live-player-tbl">
+        <thead><tr>
+          <th>Player</th>
+          <th>Score</th>
+          <th>K</th>
+          <th>D</th>
+          <th>K/D</th>
+          <th>Ping</th>
+        </tr></thead>
+        <tbody id="nva-players">
+          <tr><td colspan="6" style="text-align:center;padding:14px;color:var(--lo)">No players</td></tr>
+        </tbody>
+        <tfoot>
+          <tr class="total-row" id="nva-totals">
+            <td style="text-align:left;color:var(--lo)">Total</td>
+            <td>0</td><td>0</td><td>0</td><td>∞</td><td>—</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sort tabs -->
+  <div class="live-sort-tabs">
+    <div class="live-sort-tab active" onclick="setLiveSort('score')">Score</div>
+    <div class="live-sort-tab" onclick="setLiveSort('kills')">Kills</div>
+    <div class="live-sort-tab" onclick="setLiveSort('kd')">K/D</div>
+    <div class="live-sort-tab" onclick="setLiveSort('rounds')">Rounds</div>
+    <div class="live-sort-tab" onclick="setLiveSort('ping')">Avg Ping</div>
+  </div>
+
+  <!-- Round History -->
+  <div class="tbl-wrap">
+    <div class="round-hist-hdr">Round History</div>
+    <div class="rh-row rh-row-hdr">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)">Map</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)">Winner</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);text-align:center">Duration</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);text-align:center">Players</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);text-align:right">When</div>
+    </div>
+    <div id="round-history-body">
+      <!-- seeded with example data matching screenshot 2 style -->
+    </div>
+  </div>
+</div>
+
+<footer>
+  -{GmV}- Battlefield Vietnam Stats &nbsp;·&nbsp;
+  <a href="https://github.com/Mati-l33t" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:none;transition:.12s" onmouseover="this.style.color='var(--hi)'" onmouseout="this.style.color='var(--acc)'">-{GmV}- m@gic</a>
+  © 2026 &nbsp;·&nbsp; Some rights reserved &nbsp;·&nbsp; v2.0
+</footer>
+
+<script>
+// ── UTILITIES ──────────────────────────────────────────────────────────────────
+function esc(s){var d=document.createElement('div');d.textContent=String(s==null?'':s);return d.innerHTML;}
+function fmt(n){return(+(n||0)).toLocaleString();}
+function fmtF(v,d){if(d===undefined)d=2;return(+(v||0)).toFixed(d);}
+function kdHtml(kd){var v=fmtF(kd,3),c=(+kd>1.2)?'kp':(+kd<0.8)?'kn':'';return c?'<span class="'+c+'">'+v+'</span>':v;}
+function pbarHtml(pct){return '<div class="pbar"><div class="pbar-fill" style="width:'+Math.min(100,+(pct)||0)+'%"></div></div>';}
+function av(name){return String(name||'?')[0].toUpperCase();}
+function fmtTime(s){return String(s||"").replace("T"," ").replace(/\.\d+$/,"");}
+function fmtMode(s){var m={"GPM_CQ":"Conquest","GPM_ASSAULT":"Assault","GPM_CTF":"Capture the Flag","GPM_COOP":"Co-op"};return m[s]||s||"Conquest";}
+function fmtMapName(s){return String(s||'').split('_').map(function(w){return w?w.charAt(0).toUpperCase()+w.slice(1):'';}).join(' ');}
+function setEl(id,val){var e=document.getElementById(id);if(e)e.innerHTML=val;}
+function loadingRow(cols){return '<tr><td colspan="'+cols+'" style="text-align:center;padding:20px;color:var(--lo)">Loading\u2026</td></tr>';}
+function errRow(cols,msg){return '<tr><td colspan="'+cols+'" style="text-align:center;padding:20px;color:var(--red)">'+(msg||'Failed to load')+'</td></tr>';}
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+var loaded={};
+var pagCbs={};
+var mapIndex={}; // display name -> slug id
+var MAP_IMG={
+  'operation_flaming_dart':    'operationflamingdart-a.jpg',
+  'operation_hastings':        'operationhastings-d.jpg',
+  'cambodian_incursion':       'cambodianincursion.jpg',
+  'cedar_falls':               'cedarfalls.jpg',
+  'defence_of_con_thien':      'defenceofconthien.jpg',
+  'defense_of_con_thien':      'defense_of_con_thien.jpg',
+  'fall_of_lang_vei':          'falloflangvei-d.jpg',
+  'fall_of_saigon':            'fallofsaigon.jpg',
+  'game_warden':               'gamewarden.jpg',
+  'ho_chi_minh_trail':         'hochiminhtrail-b.jpg',
+  'hue_1968':                  'hue1968.jpg',
+  'ia_drang_valley':           'iadrangvalley-d.jpg',
+  'irving':                    'irving.jpg',
+  'khe_sanh_airfield':         'kbelly-airfield.jpg',
+  'landing_zone_albany':       'landingzonealbany-c.jpg',
+  'operation_game_warden':     'operationgamewarden-a.jpg',
+  'quang_tri_1968':            'quangtri1968.jpg',
+  'quang_tri_1972':            'quangtri1972.jpg',
+  'reclaiming_hue':            'reclaiminghue.jpg',
+  'saigon_1968':               'saigon68.jpg',
+  'siege_of_khe_sanh':         'siegeofkhesahn-a.jpg',
+  'weapon_bunkers':            'weapon-bunkers.jpg',
+  'defenceofconthien':         'defenceofconthien.jpg',
+  'falloflangvei':             'falloflangvei-d.jpg',
+  'fallofsaigon':              'fallofsaigon.jpg',
+  'hochiminhtrail':            'hochiminhtrail-b.jpg',
+  'hue1968':                   'hue1968.jpg',
+  'iadrangvalley':             'iadrangvalley-d.jpg',
+  'landingzonealbany':         'landingzonealbany-c.jpg',
+  'operationflamingdart':      'operationflamingdart-a.jpg',
+  'operationgamewarden':       'operationgamewarden-a.jpg',
+  'operationhastings':         'operationhastings-d.jpg',
+  'quangtri1968':              'quangtri1968.jpg',
+  'quangtri1972':              'quangtri1972.jpg',
+  'reclaiminghue':             'reclaiminghue.jpg',
+  'siegeofkhesahn':            'siegeofkhesahn-a.jpg',
+};
+function mapImg(slug){
+  var f=MAP_IMG[slug]||MAP_IMG[(slug||'').replace(/_/g,'')];
+  return f?'/mapscreens/'+f:null;
+}
+var rankPage=0,rankSort='score',rankOrder='desc',rankSearch='',rankPeriod='',rankFilter='';
+var gamesPage=0;
+var liveTimer=null;
+var liveSort='score';
+var adminToken=null;
+try{adminToken=sessionStorage.getItem('bfv_admin_token');}catch(e){}
+var rankDebTimer=null;
+
+// ── PAGINATION ─────────────────────────────────────────────────────────────────
+function _pg(id,p){if(pagCbs[id])pagCbs[id](p);}
+function renderPag(elId,cur,total,cb){
+  pagCbs[elId]=cb;
+  var el=document.getElementById(elId);
+  if(!el)return;
+  if(total<=1){el.innerHTML='';return;}
+  function btn(label,page,active){
+    var dis=page<0||page>=total;
+    var st=dis?' style="opacity:0.35;cursor:default"':'';
+    var oc=dis?'':' onclick="_pg(\''+elId+'\','+page+')"';
+    return '<div class="pbtn'+(active?' on':'')+'"'+st+oc+'>'+label+'</div>';
+  }
+  var nums=[];
+  if(total<=7){for(var i=0;i<total;i++)nums.push(i);}
+  else{
+    nums.push(0);
+    if(cur>2)nums.push(null);
+    for(var i=Math.max(1,cur-1);i<=Math.min(total-2,cur+1);i++)nums.push(i);
+    if(cur<total-3)nums.push(null);
+    nums.push(total-1);
+  }
+  var h=btn('\u2039',cur-1,false);
+  nums.forEach(function(p){
+    if(p===null)h+='<div class="pbtn">\u2026</div>';
+    else h+=btn(p+1,p,p===cur);
+  });
+  h+=btn('\u203a',cur+1,false);
+  el.innerHTML=h;
+}
+
+// ── NAV ────────────────────────────────────────────────────────────────────────
+function nav(page,e){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('visible');});
+  document.querySelectorAll('nav a').forEach(function(a){a.classList.remove('active');});
+  var pg=document.getElementById('page-'+page);
+  if(pg)pg.classList.add('visible');
+  var na=document.getElementById('nav-'+page);
+  if(na)na.classList.add('active');
+  if(liveTimer&&page!=='live'){clearInterval(liveTimer);liveTimer=null;}
+  if(!e&&history.pushState){history.pushState({page:page},'','#'+page);}
+  if(!loaded[page]){
+    loaded[page]=true;
+    if(page==='weapons')loadWeapons();
+    else if(page==='vehicles')loadVehicles();
+    else if(page==='chars')loadChars();
+    else if(page==='maps'){loadMapsList();}
+    else if(page==='games'){gamesPage=0;loadGames();}
+    else if(page==='live')startLive();
+    else if(page==='admin')initAdmin();
+  }
+}
+function _pushState(state,hash){
+  if(history.pushState){history.pushState(state,'','#'+hash);}
+}
+window.addEventListener('popstate',function(e){
+  var s=e.state;
+  if(!s)return;
+  if(s.view==='player')showPlayer(s.id,true);
+  else if(s.view==='game')showGame(s.id,true);
+  else if(s.view==='map')showMap(s.id,true);
+  else if(s.page)_navNoHistory(s.page);
+});
+function _navNoHistory(page){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('visible');});
+  document.querySelectorAll('nav a').forEach(function(a){a.classList.remove('active');});
+  var pg=document.getElementById('page-'+page);if(pg)pg.classList.add('visible');
+  var na=document.getElementById('nav-'+page);if(na)na.classList.add('active');
+  if(liveTimer&&page!=='live'){clearInterval(liveTimer);liveTimer=null;}
+  if(!e&&history.pushState){history.pushState({page:page},'','#'+page);}
+}
+
+// ── SUMMARY ────────────────────────────────────────────────────────────────────
+function loadSummary(){
+  return fetch('/api/stats/summary').then(function(r){return r.json();}).then(function(d){
+    setEl('hero-players',fmt(d.players));
+    setEl('hero-games',fmt(d.games));
+    setEl('hero-kills',fmt(d.kills));
+    setEl('hero-online','0');
+    var eo=document.getElementById('hero-online');
+    if(eo)eo.style.color='var(--lo)';
+  }).catch(function(){});
+}
+async function loadHeroMeta(){
+  try{
+    var d=await fetch('/api/games?limit=1&offset=0').then(function(r){return r.json();});
+    if(d.games&&d.games[0]){
+      var g=d.games[0];
+      setEl('hero-lastgame',fmtTime(g.start_time));
+      setEl('hero-server',esc(g.server_name));
+    }
+  }catch(e){}
+}
+
+// ── SIDEBAR ────────────────────────────────────────────────────────────────────
+function loadSidebarGames(){
+  var el=document.getElementById('sidebar-games');
+  if(!el)return;
+  fetch('/api/games?limit=5&offset=0').then(function(r){return r.json();}).then(function(d){
+    el.innerHTML=(d.games||[]).map(function(g){
+      return '<div class="grow" onclick="showGame('+g.id+')">'+
+        '<div class="gdate">'+fmtTime(g.start_time)+'</div>'+
+        '<div><div class="gmap">'+esc(g.map_name)+'</div>'+
+        '<div class="gsub">'+esc(g.server_name)+' &middot; '+fmt(g.player_count)+' players</div></div>'+
+        '<div class="gright"><span class="gscore" style="color:var(--acc)">#'+g.id+'</span></div></div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='<div style="padding:10px;color:var(--lo);font-size:11px">No data</div>';});
+}
+
+function loadSidebarWeapons(){
+  var el=document.getElementById('sidebar-weapons');
+  if(!el)return;
+  fetch('/api/weapons').then(function(r){return r.json();}).then(function(d){
+    var top=d.slice(0,6);
+    var maxK=top[0]?top[0].kills:1;
+    el.innerHTML=top.map(function(w){
+      return '<div class="wbr">'+
+        '<div class="wbr-top"><span class="wbr-n">'+esc(w.name)+'</span><span class="wbr-k">'+fmt(w.kills)+'</span></div>'+
+        pbarHtml(w.kills/maxK*100)+'</div>';
+    }).join('');
+  }).catch(function(){});
+}
+
+function loadSidebarMaps(){
+  var el=document.getElementById('sidebar-maps');
+  if(!el)return;
+  fetch('/api/maps').then(function(r){return r.json();}).then(function(d){
+    d.forEach(function(m){mapIndex[m.name]=m.id;});
+    el.innerHTML=d.slice(0,5).map(function(m){
+      var total=(m.red_wins+m.blue_wins)||1;
+      var usPct=Math.round(m.blue_wins/total*100);
+      var col=usPct>=50?'var(--green)':'var(--red)';
+      return '<div class="wr" onclick="showMap(\''+esc(m.id)+'\')" style="cursor:pointer">'+
+        '<span class="wr-l">'+fmtMapName(m.name)+'</span>'+
+        '<span class="wr-v" style="color:'+col+'">'+usPct+'%</span></div>';
+    }).join('');
+  }).catch(function(){});
+}
+
+// ── RANKINGS ───────────────────────────────────────────────────────────────────
+function setRankFilter(f,btn){
+  rankFilter=f==='all'?'':f;
+  rankPage=0;
+  document.querySelectorAll('.srow .fbtn').forEach(function(b){b.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+  loadRankings();
+}
+function setRankPeriod(p){
+  rankPeriod=p==='all'?'':p;
+  rankPage=0;
+  document.querySelectorAll('.tabs .tab').forEach(function(t){
+    t.classList.toggle('active',t.textContent.trim()===(p==='all'?'All Time':p==='month'?'This Month':'This Week'));
+  });
+  loadRankings();
+}
+function setRankSort(col){
+  if(rankSort===col){rankOrder=rankOrder==='desc'?'asc':'desc';}
+  else{rankSort=col;rankOrder='desc';}
+  rankPage=0;
+  // update header arrows
+  var labels={'score':'Score','sr':'S/R','kills':'Kills','deaths':'Deaths','kd':'K/D','tks':'TKs','rounds':'Rounds'};
+  document.querySelectorAll('th[id^="th-"],th[onclick^="setRankSort"]').forEach(function(th){
+    var m=th.getAttribute('onclick')||'';
+    var c=m.replace(/.*setRankSort\('([^']+)'\).*/,'$1');
+    if(c===col){th.innerHTML=labels[col]+(rankOrder==='desc'?' ↓':' ↑');}
+    else if(labels[c]){th.innerHTML=labels[c];}
+  });
+  loadRankings();
+}
+function onRankSearch(v){
+  clearTimeout(rankDebTimer);
+  rankSearch=v;rankPage=0;
+  rankDebTimer=setTimeout(loadRankings,300);
+}
+
+function loadRankings(){
+  var isTop50=rankFilter==='top50';
+  var limit=isTop50?50:25;
+  var params='limit='+limit+'&offset='+(isTop50?0:rankPage*25)+'&sort='+rankSort+'&order='+rankOrder;
+  if(rankSearch)params+='&search='+encodeURIComponent(rankSearch);
+  if(rankPeriod)params+='&period='+rankPeriod;
+  if(rankFilter==='clan')params+='&filter=clan';
+  var tbody=document.getElementById('rank-tbody');
+  if(tbody)tbody.innerHTML=loadingRow(14);
+  return fetch('/api/players?'+params).then(function(r){return r.json();}).then(function(d){
+    var off=rankPage*25;
+    if(tbody)tbody.innerHTML=(d.players||[]).map(function(p,i){
+      return '<tr onclick="showPlayer('+p.id+')">'+
+        '<td class="tl">'+(off+i+1)+'</td>'+
+        '<td class="tl"><div class="pcell"><div class="av">'+av(p.name)+'</div><span class="plink">\u2191 '+esc(p.name)+'</span></div></td>'+
+        '<td>'+fmt(p.score)+'</td>'+
+        '<td>'+fmtF(p.sr)+'</td>'+
+        '<td>'+fmt(p.kills)+'</td>'+
+        '<td>'+fmt(p.deaths)+'</td>'+
+        '<td>'+kdHtml(p.kd)+'</td>'+
+        '<td>'+fmt(p.tks)+'</td>'+
+        '<td>'+fmt(p.gold_awards)+'</td>'+
+        '<td>'+fmt(p.silver_awards)+'</td>'+
+        '<td>'+fmt(p.bronze_awards)+'</td>'+
+        '<td>'+fmt(p.repairs)+'</td>'+
+        '<td>'+fmt(p.heal_points)+'</td>'+
+        '<td>'+fmt(p.rounds)+'</td>'+
+        '</tr>';
+    }).join('');
+    var total=d.total||0;
+    var totalPages=Math.ceil(total/limit)||1;
+    var pagEl=document.querySelector('.pag');
+    if(pagEl)pagEl.style.display=isTop50?'none':'';
+    if(!isTop50){
+      setEl('pag-info','Showing '+(off+1)+'\u2013'+(off+(d.players||[]).length)+' of '+fmt(total));
+      renderPag('pag-btns',rankPage,totalPages,function(p){rankPage=p;loadRankings();});
+    }
+    if(rankPage===0&&!rankSearch)renderPodium(d.players||[]);
+  }).catch(function(){
+    if(tbody)tbody.innerHTML=errRow(14);
+  });
+}
+
+// ── PODIUM ─────────────────────────────────────────────────────────────────────
+function renderPodium(players){
+  var cards=document.querySelectorAll('.podium .pcard');
+  cards.forEach(function(card,i){
+    var p=players[i];
+    if(!p)return;
+    card.onclick=function(){showPlayer(p.id);};
+    var pn=card.querySelector('.pn');
+    if(pn)pn.textContent='\u2191 '+p.name+(i===0?' \u25bc':'');
+    var pvs=card.querySelectorAll('.ps-v');
+    if(pvs[0])pvs[0].textContent=fmt(p.score);
+    if(pvs[1])pvs[1].textContent=fmt(p.kills);
+    if(pvs[2])pvs[2].textContent=fmtF(p.sr);
+    if(pvs[3])pvs[3].textContent=fmtF(p.kd,3);
+    var kdEl=pvs[3];
+    if(kdEl){kdEl.className='ps-v '+((+p.kd>1.2)?'kp':(+p.kd<0.8)?'kn':'');}
+  });
+}
+
+// ── PLAYER PROFILE ─────────────────────────────────────────────────────────────
+function showPlayer(id,nohist){
+  nav('player',true);
+  if(!nohist)_pushState({view:'player',id:id},'player-'+id);
+  setEl('pp-av','\u2026');setEl('pp-name','Loading\u2026');setEl('pp-sub','');setEl('pp-kpis','');
+  ['pp-dname','pp-dseen','pp-drounds','pp-dscore','pp-dkills','pp-ddeaths','pp-dkd','pp-dtks','pp-dsr','pp-drepairs','pp-dheal-self','pp-dheal-team'].forEach(function(id){setEl(id,'\u2026');});
+  setEl('pp-dawards','');
+  ['pp-nicknames','pp-chartypes','pp-weapons-tbody','pp-vehicles-tbody','pp-victims-tbody','pp-assassins-tbody','pp-mapperf-tbody','pp-lastgames-tbody'].forEach(function(tid){setEl(tid,loadingRow(5));});
+  fetch('/api/players/'+id).then(function(r){return r.json();}).then(function(d){
+    var p=d.player;
+    setEl('bc-pname',esc(p.name));
+    setEl('pp-av',av(p.name));
+    setEl('pp-name',esc(p.name));
+    setEl('pp-sub','Last seen: '+fmtTime(p.last_seen||'\u2014')+' \u00b7 Rank #'+fmt(p.rank));
+    setEl('pp-kpis',
+      '<div class="pkpi"><div class="pkpi-v">'+fmt(p.score)+'</div><div class="pkpi-l">Score</div></div>'+
+      '<div class="pkpi"><div class="pkpi-v">'+fmt(p.kills)+'</div><div class="pkpi-l">Kills</div></div>'+
+      '<div class="pkpi"><div class="pkpi-v">'+fmtF(p.kd,3)+'</div><div class="pkpi-l">K/D</div></div>'+
+      '<div class="pkpi"><div class="pkpi-v">'+fmt(p.rounds)+'</div><div class="pkpi-l">Rounds</div></div>'+
+      '<div class="pkpi"><div class="pkpi-v">'+fmtF(p.sr)+'</div><div class="pkpi-l">S/R</div></div>');
+    setEl('pp-dname',esc(p.name));
+    setEl('pp-dseen',fmtTime(p.last_seen||'\u2014'));
+    setEl('pp-drounds',fmt(p.rounds));
+    setEl('pp-dscore',fmt(p.score));
+    setEl('pp-dkills',fmt(p.kills));
+    setEl('pp-ddeaths',fmt(p.deaths));
+    setEl('pp-dkd',kdHtml(p.kd));
+    setEl('pp-dtks','<span style="color:var(--red)">'+fmt(p.tks)+'</span>');
+    setEl('pp-dsr',fmtF(p.sr));
+    setEl('pp-drepairs',fmt(p.repairs));
+    setEl('pp-dheal-self',fmt(p.heal_points||0));
+    setEl('pp-dheal-team','\u2014');
+    setEl('pp-dawards','<div class="awards">'+
+      '<span class="award gold">\u00d7'+fmt(p.gold_awards)+'</span>'+
+      '<span class="award silver">\u00d7'+fmt(p.silver_awards)+'</span>'+
+      '<span class="award bronze">\u00d7'+fmt(p.bronze_awards)+'</span></div>');
+
+    var nicks=d.nicknames||[];
+    var maxN=nicks[0]?nicks[0].usage_count:1;
+    setEl('pp-nicknames',nicks.length?nicks.map(function(n,i){
+      return '<tr><td class="tl">'+(i+1)+'</td><td class="tl hi">'+esc(n.name)+'</td><td>'+fmt(n.usage_count)+'</td>'+
+        '<td>'+pbarHtml(n.usage_count/maxN*100)+'</td></tr>';
+    }).join(''):errRow(4,'No nicknames'));
+
+    var cts=d.chartypes||[];
+    var maxC=cts[0]?cts[0].usage_count:1;
+    setEl('pp-chartypes',cts.length?cts.map(function(c,i){
+      return '<tr><td class="tl">'+(i+1)+'</td><td class="tl hi">'+esc(c.chartype)+'</td><td>'+fmt(c.usage_count)+'</td>'+
+        '<td>'+pbarHtml(c.usage_count/maxC*100)+'</td></tr>';
+    }).join(''):errRow(4,'No data'));
+
+    var wps=d.weapons||[];
+    var maxW=wps[0]?wps[0].kills:1;
+    setEl('pp-weapons-tbody',wps.length?wps.map(function(w,i){
+      return '<tr><td class="tl">'+(i+1)+'</td><td class="tl hi">'+esc(w.name)+'</td><td>'+fmt(w.kills)+'</td>'+
+        '<td>'+fmtF(w.pct)+'</td><td>'+pbarHtml(w.kills/maxW*100)+'</td></tr>';
+    }).join(''):errRow(5,'No data'));
+
+    var vhs=d.vehicles||[];
+    var maxV=vhs[0]?vhs[0].seconds:1;
+    setEl('pp-vehicles-tbody',vhs.length?vhs.map(function(v,i){
+      return '<tr><td class="tl">'+(i+1)+'</td><td class="tl hi">'+esc(v.name)+'</td>'+
+        '<td>'+esc(v.time_fmt)+' \u23f1</td><td>'+fmtF(v.pct)+'</td>'+
+        '<td>'+pbarHtml(v.seconds/maxV*100)+'</td></tr>';
+    }).join(''):errRow(5,'No data'));
+
+    var tvs=d.top_victims||[];
+    var maxTV=tvs[0]?tvs[0].kills:1;
+    setEl('pp-victims-tbody',tvs.length?tvs.map(function(v,i){
+      return '<tr onclick="showPlayer('+v.victim_id+')"><td class="tl">'+(i+1)+'</td>'+
+        '<td class="tl"><span class="plink">\u2191 '+esc(v.victim_name)+'</span></td>'+
+        '<td>'+fmt(v.kills)+'</td><td>'+fmtF(v.pct)+'</td>'+
+        '<td>'+pbarHtml(v.kills/maxTV*100)+'</td></tr>';
+    }).join(''):errRow(5,'No data'));
+
+    var tas=d.top_assassins||[];
+    var maxTA=tas[0]?tas[0].kills:1;
+    setEl('pp-assassins-tbody',tas.length?tas.map(function(a,i){
+      return '<tr onclick="showPlayer('+a.killer_id+')"><td class="tl">'+(i+1)+'</td>'+
+        '<td class="tl"><span class="plink">\u2191 '+esc(a.killer_name)+'</span></td>'+
+        '<td>'+fmt(a.kills)+'</td><td>'+fmtF(a.pct)+'</td>'+
+        '<td>'+pbarHtml(a.kills/maxTA*100)+'</td></tr>';
+    }).join(''):errRow(5,'No data'));
+
+    var mps=d.map_perf||[];
+    var maxMP=mps[0]?mps[0].score:1;
+    setEl('pp-mapperf-tbody',mps.length?mps.map(function(m,i){
+      var mid=mapIndex[m.map_name]||encodeURIComponent(m.map_name);
+      return '<tr onclick="showMap(\''+mid+'\')"><td class="tl">'+(i+1)+'</td>'+
+        '<td class="tl" style="font-size:10px">\uD83D\uDDFA</td>'+
+        '<td class="tl hi">'+fmtMapName(m.map_name)+'</td>'+
+        '<td>'+fmt(m.score)+'</td><td>'+fmtF(m.pct)+'</td>'+
+        '<td>'+pbarHtml(m.score/maxMP*100)+'</td></tr>';
+    }).join(''):errRow(6,'No data'));
+
+    var lgs=d.last_games||[];
+    setEl('pp-lastgames-tbody',lgs.length?lgs.map(function(g){
+      return '<tr onclick="showGame('+g.game_id+')">'+
+        '<td class="tl" style="font-size:10px;color:var(--lo)">'+fmtTime(g.start_time)+'</td>'+
+        '<td class="tl">'+esc(g.server_name)+'</td>'+
+        '<td class="tl">'+esc(g.mod_name)+'</td>'+
+        '<td class="tl hi">'+fmtMapName(g.map_name)+'</td>'+
+        '<td>'+fmtMode(g.gamemode)+'</td>'+
+        '<td>'+fmt(g.score)+'</td><td>'+fmt(g.kills)+'</td><td>'+fmt(g.deaths)+'</td>'+
+        '</tr>';
+    }).join(''):errRow(8,'No data'));
+  }).catch(function(e){
+    setEl('pp-name','Failed to load');
+    console.error(e);
+  });
+}
+
+// ── GAME DETAIL ─────────────────────────────────────────────────────────────────
+function showGame(id,nohist){
+  nav('game',true);
+  if(!nohist)_pushState({view:'game',id:id},'game-'+id);
+  setEl('bc-gname','Game #'+id);
+  var el=document.getElementById('game-detail-content');
+  if(el)el.innerHTML='<div style="text-align:center;padding:40px;color:var(--lo)">Loading\u2026</div>';
+  fetch('/api/games/'+id).then(function(r){return r.json();}).then(function(d){
+    var g=d.game;
+    var mapId=mapIndex[g.map_name]||encodeURIComponent(g.map_name||'');
+    var html='<div class="game-detail-grid">'+
+      '<div class="card">'+
+      '<div class="card-hdr">Game Details</div>'+
+      '<div class="drow"><div class="dk">Server</div><div class="dv">'+esc(g.server_name)+'</div></div>'+
+      '<div class="drow"><div class="dk">Mod</div><div class="dv">'+esc(g.mod_name)+'</div></div>'+
+      '<div class="drow"><div class="dk">GameID</div><div class="dv" style="color:var(--acc)">#'+g.id+'</div></div>'+
+      '<div class="drow"><div class="dk">Game-Mode</div><div class="dv">'+fmtMode(g.gamemode)+'</div></div>'+
+      '<div class="drow"><div class="dk">Map</div><div class="dv"><span onclick="showMap(\''+mapId+'\')" style="color:var(--acc);cursor:pointer">'+esc(g.map_name)+' \u2197</span></div></div>'+
+      '<div class="drow"><div class="dk">Game-Time</div><div class="dv">'+esc(g.gametime||'\u2014')+'</div></div>'+
+      '<div class="drow"><div class="dk">Player-Limit</div><div class="dv">'+esc(g.maxplayers||'\u2014')+'</div></div>'+
+      '<div class="drow"><div class="dk">Score-Limit</div><div class="dv">'+esc(g.scorelimit||0)+'</div></div>'+
+      '</div>';
+
+    (d.rounds||[]).forEach(function(round,ri){
+      var t1win=round.winning_team===1;
+      var roundPlayers=(d.players||[]).filter(function(p){return p.round_id===round.id;});
+      var t1=roundPlayers.filter(function(p){return p.team===1;}).sort(function(a,b){return b.score-a.score;});
+      var t2=roundPlayers.filter(function(p){return p.team===2;}).sort(function(a,b){return b.score-a.score;});
+      var allS=roundPlayers.slice().sort(function(a,b){return b.score-a.score;});
+      var chat=(d.chat||[]).filter(function(c){return !c.round_id||c.round_id===round.id;});
+
+      html+='<div class="round-box">'+
+        '<div class="round-hdr">'+
+        '<div class="round-title">Round '+(ri+1)+'</div>'+
+        '<div class="round-time">Start: '+esc(round.starttime||'\u2014')+' &nbsp;&middot;&nbsp; End: '+esc(round.endtime||'\u2014')+'</div>'+
+        '</div><div class="round-body">'+
+        '<div class="ticket-grid">'+
+        '<div class="tk-box"><div class="tk-hdr r">\uD83C\uDDFB\uD83C\uDDF3 Red Team (NVA/VC)</div>'+
+        '<div class="tk-row"><span>Started with</span><span>'+fmt(round.start_tickets_team1)+' Tickets</span></div>'+
+        '<div class="tk-row"><span>Finished with</span><span style="color:'+(t1win?'var(--green)':'var(--red)')+'">'+fmt(round.end_tickets_team1)+' Tickets</span></div></div>'+
+        '<div class="tk-box"><div class="tk-hdr b">\uD83C\uDDFA\uD83C\uDDF8 Blue Team (US/ARVN)</div>'+
+        '<div class="tk-row"><span>Started with</span><span>'+fmt(round.start_tickets_team2)+' Tickets</span></div>'+
+        '<div class="tk-row"><span>Finished with</span><span style="color:'+(t1win?'var(--red)':'var(--green)')+'">'+fmt(round.end_tickets_team2)+' Tickets</span></div></div>'+
+        '</div>'+
+        '<div class="winner-bar '+(t1win?'r':'b')+'">'+(t1win?'\uD83C\uDDFB\uD83C\uDDF3 Red Team Won!':'\uD83C\uDDFA\uD83C\uDDF8 Blue Team Won!')+'</div>';
+
+      if(chat.length){
+        html+='<div style="font-family:\'Rajdhani\',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Chat Log</div>'+
+          '<div class="chat-box">';
+        chat.forEach(function(c){
+          html+='<div><span class="chat-t">['+esc(c.time)+']</span> <span class="chat-p">'+esc(c.player_name)+'</span> <span class="chat-all">(All): '+esc(c.text)+'</span></div>';
+        });
+        html+='</div>';
+      }
+
+      html+='<div style="font-family:\'Rajdhani\',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:6px">End-of-Game Ranking</div>'+
+        '<table class="eog-t" style="margin-bottom:14px">'+
+        '<thead><tr><th class="tl">Rank</th><th class="tl">Player</th><th>Team</th><th>Score</th><th>Kills</th><th>Deaths</th><th>TKs</th></tr></thead><tbody>';
+      allS.forEach(function(p,pi){
+        var isRed=p.team===1;
+        html+='<tr onclick="showPlayer('+p.player_id+')">'+
+          '<td class="tl">'+(pi+1)+'</td>'+
+          '<td class="tl"><span class="plink">\u2191 '+esc(p.player_name)+'</span></td>'+
+          '<td><span class="fl '+(isRed?'fl-nva':'fl-us')+'"></span>'+(isRed?'Red':'Blue')+'</td>'+
+          '<td>'+p.score+'</td><td>'+p.kills+'</td><td>'+p.deaths+'</td><td>'+p.tks+'</td>'+
+          '</tr>';
+      });
+      html+='</tbody></table>';
+
+      html+='<div class="team-split">'+
+        '<div class="card"><div class="team-tbl-hdr r">\uD83C\uDDFB\uD83C\uDDF3 Red Team</div>'+
+        '<table class="eog-t"><thead><tr><th class="tl">#</th><th class="tl">Player</th><th>Score</th><th>Kills</th><th>Deaths</th></tr></thead><tbody>';
+      t1.forEach(function(p,pi){
+        html+='<tr onclick="showPlayer('+p.player_id+')"><td class="tl">'+(pi+1)+'</td><td class="tl"><span class="plink">'+esc(p.player_name)+'</span></td><td>'+p.score+'</td><td>'+p.kills+'</td><td>'+p.deaths+'</td></tr>';
+      });
+      html+='</tbody></table></div>'+
+        '<div class="card"><div class="team-tbl-hdr b">\uD83C\uDDFA\uD83C\uDDF8 Blue Team</div>'+
+        '<table class="eog-t"><thead><tr><th class="tl">#</th><th class="tl">Player</th><th>Score</th><th>Kills</th><th>Deaths</th></tr></thead><tbody>';
+      t2.forEach(function(p,pi){
+        html+='<tr onclick="showPlayer('+p.player_id+')"><td class="tl">'+(pi+1)+'</td><td class="tl"><span class="plink">'+esc(p.player_name)+'</span></td><td>'+p.score+'</td><td>'+p.kills+'</td><td>'+p.deaths+'</td></tr>';
+      });
+      html+='</tbody></table></div></div>';
+      html+='</div></div>'; // round-body, round-box
+    });
+
+    html+='</div>'; // game-detail-grid
+    if(el)el.innerHTML=html;
+  }).catch(function(e){
+    if(el)el.innerHTML='<div style="color:var(--red);padding:20px">Failed to load game #'+id+'</div>';
+    console.error(e);
+  });
+}
+
+// ── MAP DETAIL ──────────────────────────────────────────────────────────────────
+function showMap(mapId,nohist){
+  nav('map',true);
+  if(!nohist)_pushState({view:'map',id:mapId},'map-'+mapId);
+  setEl('bc-mapname',fmtMapName(mapId));
+  var el=document.getElementById('map-detail-content');
+  if(el)el.innerHTML='<div style="text-align:center;padding:40px;color:var(--lo)">Loading\u2026</div>';
+  fetch('/api/maps/'+encodeURIComponent(mapId)).then(function(r){return r.json();}).then(function(d){
+    var m=d.map;
+    var ts=d.team_stats||{};
+    var totalR=(ts.red_wins||0)+(ts.blue_wins||0)||1;
+    setEl('bc-mapname',fmtMapName(m.name));
+    var mapImgHtml=(function(){var img=mapImg(m.name||m.id);return img?'<div class="map-thumb" style="background:none;border:none;padding:0;overflow:hidden"><img src="'+img+'" alt="'+esc(fmtMapName(m.name))+'" style="width:100%;height:100%;object-fit:cover;border-radius:3px;display:block"></div>':'<div class="map-thumb"><div style="font-family:\'Rajdhani\',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--hi);text-align:center;padding:8px 4px">'+esc(fmtMapName(m.name))+'</div></div>';})();
+    var html='<div class="map-hero">'+mapImgHtml+
+      '<div><div class="map-bigname">'+esc(m.name)+'</div>'+
+      '<div class="map-sub">Conquest &middot; bfvietnam &middot; '+fmt(totalR)+' rounds played</div></div></div>'+
+      '<div class="team-stats-grid">'+
+      '<div class="tbox r"><div class="tbox-hdr">\uD83C\uDDFB\uD83C\uDDF3 Red Team (NVA/VC)</div>'+
+      '<div class="tbox-row"><span>Won Rounds</span><span>'+fmt(ts.red_wins)+'</span></div>'+
+      '<div class="tbox-row"><span>Total Kills</span><span>'+fmt(ts.red_kills)+'</span></div>'+
+      '<div class="tbox-row"><span>Total Deaths</span><span>'+fmt(ts.red_deaths)+'</span></div>'+
+      '<div class="tbox-row"><span>\u00d8 Red tickets (when Red wins)</span><span style="color:var(--green)">'+fmtF(ts.avg_red_tickets_win||0)+'</span></div>'+
+      '<div class="tbox-row"><span>\u00d8 Blue tickets (when Red wins)</span><span style="color:var(--red)">'+fmtF(ts.avg_blue_tickets_win||0)+'</span></div>'+
+      '</div>'+
+      '<div class="tbox b"><div class="tbox-hdr">\uD83C\uDDFA\uD83C\uDDF8 Blue Team (US/ARVN)</div>'+
+      '<div class="tbox-row"><span>Won Rounds</span><span>'+fmt(ts.blue_wins)+'</span></div>'+
+      '<div class="tbox-row"><span>Total Kills</span><span>'+fmt(ts.blue_kills)+'</span></div>'+
+      '<div class="tbox-row"><span>Total Deaths</span><span>'+fmt(ts.blue_deaths)+'</span></div>'+
+      '<div class="tbox-row"><span>\u00d8 Red tickets (when Blue wins)</span><span style="color:var(--red)">'+fmtF(ts.avg_red_tickets_win||0)+'</span></div>'+
+      '<div class="tbox-row"><span>\u00d8 Blue tickets (when Blue wins)</span><span style="color:var(--green)">'+fmtF(ts.avg_blue_tickets_win||0)+'</span></div>'+
+      '</div></div>';
+
+    if(d.best_rounds&&d.best_rounds.length){
+      html+='<div class="card" style="margin-bottom:14px"><div class="card-hdr">Best Rounds on this Map</div>'+
+        '<table><thead><tr><th class="tl">Player</th><th>Score</th><th>Kills</th><th>Deaths</th><th>TKs</th>'+
+        '<th class="tl">Server</th><th>Time</th></tr></thead><tbody>';
+      d.best_rounds.forEach(function(r){
+        html+='<tr onclick="showPlayer('+r.player_id+')">'+
+          '<td class="tl"><span class="plink">\u2191 '+esc(r.player_name)+'</span></td>'+
+          '<td>'+fmt(r.score)+'</td><td>'+fmt(r.kills)+'</td><td>'+fmt(r.deaths)+'</td><td>'+fmt(r.tks)+'</td>'+
+          '<td class="tl" style="font-size:10px;color:var(--lo)">'+esc(r.server_name)+'</td>'+
+          '<td style="font-size:10px;color:var(--lo)">'+fmtTime(r.start_time)+'</td></tr>';
+      });
+      html+='</tbody></table></div>';
+    }
+
+    if(d.top_killers&&d.top_killers.length){
+      var maxK=d.top_killers[0].kills;
+      var rnC=['g','s','b'];
+      html+='<div class="card"><div class="card-hdr">Top Killers on this Map</div>'+
+        '<table><thead><tr><th class="tl">Rank</th><th class="tl">Player</th><th>Kills</th><th style="width:250px"></th></tr></thead><tbody>';
+      d.top_killers.forEach(function(k,i){
+        html+='<tr onclick="showPlayer('+k.player_id+')">'+
+          '<td class="tl"><span class="rn '+(rnC[i]||'')+'">'+( i+1)+'</span></td>'+
+          '<td class="tl"><span class="plink">\u2191 '+esc(k.player_name)+'</span></td>'+
+          '<td>'+fmt(k.kills)+'</td><td>'+pbarHtml(k.kills/maxK*100)+'</td></tr>';
+      });
+      html+='</tbody></table></div>';
+    }
+    if(el)el.innerHTML=html;
+  }).catch(function(e){
+    if(el)el.innerHTML='<div style="color:var(--red);padding:20px">Failed to load map</div>';
+    console.error(e);
+  });
+}
+
+// ── GAMES LIST ──────────────────────────────────────────────────────────────────
+function loadGames(){
+  var el=document.getElementById('games-list');
+  if(el)el.innerHTML='<div style="text-align:center;padding:20px;color:var(--lo)">Loading\u2026</div>';
+  fetch('/api/games?limit=20&offset='+(gamesPage*20)).then(function(r){return r.json();}).then(function(d){
+    var totalPages=Math.ceil(d.total/20)||1;
+    if(el)el.innerHTML='<table>'+
+      '<thead><tr>'+
+      '<th class="tl" style="width:40px">#</th>'+
+      '<th class="tl">Start Time</th>'+
+      '<th class="tl">Server</th>'+
+      '<th class="tl">Mod</th>'+
+      '<th class="tl">Map</th>'+
+      '<th>Mode</th><th>Players</th>'+
+      '</tr></thead><tbody>'+
+      (d.games||[]).map(function(g,i){
+        return '<tr onclick="showGame('+g.id+')">'+
+          '<td class="tl" style="color:var(--lo)">'+(gamesPage*20+i+1)+'</td>'+
+          '<td class="tl" style="font-size:10px;color:var(--lo)">'+fmtTime(g.start_time)+'</td>'+
+          '<td class="tl">'+esc(g.server_name)+'</td>'+
+          '<td class="tl">'+esc(g.mod_name)+'</td>'+
+          '<td class="tl hi">'+fmtMapName(g.map_name)+'</td>'+
+          '<td>'+fmtMode(g.gamemode)+'</td>'+
+          '<td>'+fmt(g.player_count)+'</td></tr>';
+      }).join('')+'</tbody></table>';
+    setEl('games-pag-info','Showing '+(gamesPage*20+1)+'\u2013'+(gamesPage*20+(d.games||[]).length)+' of '+fmt(d.total));
+    renderPag('games-pag-btns',gamesPage,totalPages,function(p){gamesPage=p;loadGames();});
+  }).catch(function(){
+    if(el)el.innerHTML='<div style="color:var(--red);padding:20px">Failed to load</div>';
+  });
+}
+
+// ── MAPS LIST ───────────────────────────────────────────────────────────────────
+function loadMapsList(){
+  var tbody=document.getElementById('maps-tbody');
+  if(tbody)tbody.innerHTML=loadingRow(8);
+  fetch('/api/maps').then(function(r){return r.json();}).then(function(maps){
+    maps.forEach(function(m){mapIndex[m.name]=m.id;});
+    var maxK=maps[0]?maps[0].total_kills:1;
+    if(tbody)tbody.innerHTML=maps.map(function(m,i){
+      var total=(m.red_wins+m.blue_wins)||1;
+      var redPct=Math.round(m.red_wins/total*100);
+      var col=redPct>=50?'var(--red)':'var(--green)';
+      var img=mapImg(m.name||m.id);
+      var thumb=img?'<img src="'+img+'" alt="" style="width:64px;height:42px;object-fit:cover;border-radius:2px;vertical-align:middle;margin-right:8px;border:1px solid var(--border)">':'';
+      return '<tr onclick="showMap(\''+esc(m.id)+'\')">'+
+        '<td class="tl">'+(i+1)+'</td>'+
+        '<td class="tl hi" style="white-space:nowrap">'+thumb+fmtMapName(m.name)+'</td>'+
+        '<td>'+fmt(m.rounds)+'</td>'+
+        '<td style="color:#f0a0a0">'+fmt(m.red_wins)+'</td>'+
+        '<td style="color:#a0c0f0">'+fmt(m.blue_wins)+'</td>'+
+        '<td><span style="color:'+col+'">'+redPct+'%</span></td>'+
+        '<td>'+fmt(m.total_kills)+'</td>'+
+        '<td>'+pbarHtml(m.total_kills/maxK*100)+'</td></tr>';
+    }).join('');
+    loadSidebarMaps();
+  }).catch(function(){
+    if(tbody)tbody.innerHTML=errRow(8);
+  });
+}
+
+// ── WEAPONS ─────────────────────────────────────────────────────────────────────
+function loadWeapons(){
+  var tbody=document.getElementById('weapons-tbody');
+  if(tbody)tbody.innerHTML=loadingRow(5);
+  fetch('/api/weapons').then(function(r){return r.json();}).then(function(d){
+    var maxK=d[0]?d[0].kills:1;
+    if(tbody)tbody.innerHTML=d.map(function(w,i){
+      return '<tr><td class="tl">'+(i+1)+'</td><td class="tl hi">'+esc(w.name)+'</td>'+
+        '<td>'+fmt(w.kills)+'</td><td>'+fmtF(w.pct)+'</td>'+
+        '<td>'+pbarHtml(w.kills/maxK*100)+'</td></tr>';
+    }).join('');
+    loadSidebarWeapons();
+  }).catch(function(){if(tbody)tbody.innerHTML=errRow(5);});
+}
+
+// ── VEHICLES ────────────────────────────────────────────────────────────────────
+function loadVehicles(){
+  var tbody=document.getElementById('vehicles-tbody');
+  if(tbody)tbody.innerHTML=loadingRow(5);
+  fetch('/api/vehicles').then(function(r){return r.json();}).then(function(d){
+    var maxS=d[0]?d[0].seconds:1;
+    if(tbody)tbody.innerHTML=d.map(function(v,i){
+      return '<tr><td class="tl">'+(i+1)+'</td><td class="tl hi">'+esc(v.name)+'</td>'+
+        '<td>'+esc(v.time_fmt)+' \u23f1</td><td>'+fmtF(v.pct)+'</td>'+
+        '<td>'+pbarHtml(v.seconds/maxS*100)+'</td></tr>';
+    }).join('');
+  }).catch(function(){if(tbody)tbody.innerHTML=errRow(5);});
+}
+
+// ── CHARS ────────────────────────────────────────────────────────────────────────
+function loadChars(){
+  var tbody=document.getElementById('chars-tbody');
+  if(tbody)tbody.innerHTML=loadingRow(4);
+  fetch('/api/chartypes').then(function(r){return r.json();}).then(function(d){
+    var maxU=d[0]?d[0].usage_count:1;
+    if(tbody)tbody.innerHTML=d.map(function(c,i){
+      return '<tr><td class="tl">'+(i+1)+'</td><td class="tl hi">'+esc(c.chartype)+'</td>'+
+        '<td>'+fmt(c.usage_count)+'</td><td>'+fmtF(c.pct)+'</td>'+
+        '<td>'+pbarHtml(c.usage_count/maxU*100)+'</td></tr>';
+    }).join('');
+  }).catch(function(){if(tbody)tbody.innerHTML=errRow(4);});
+}
+
+// ── SEARCH ───────────────────────────────────────────────────────────────────────
+function initSearchForm(){
+  var dayEl=document.getElementById('s-day');
+  if(dayEl){for(var i=1;i<=31;i++)dayEl.innerHTML+='<option value="'+i+'">'+i+'</option>';}
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var monEl=document.getElementById('s-month');
+  if(monEl){months.forEach(function(m,i){monEl.innerHTML+='<option value="'+(i+1)+'">'+m+'</option>';});}
+  var yearEl=document.getElementById('s-year');
+  if(yearEl){var curY=new Date().getFullYear();for(var y=curY;y>=2020;y--)yearEl.innerHTML+='<option value="'+y+'">'+y+'</option>';}
+  var sn=document.getElementById('s-name');
+  if(sn)sn.addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
+}
+
+function doSearch(){
+  var params='';
+  var name=(document.getElementById('s-name')||{}).value||'';
+  var server=(document.getElementById('s-server')||{}).value||'';
+  var day=(document.getElementById('s-day')||{}).value||'';
+  var month=(document.getElementById('s-month')||{}).value||'';
+  var year=(document.getElementById('s-year')||{}).value||'';
+  if(name)params+='name='+encodeURIComponent(name)+'&';
+  if(server)params+='server='+encodeURIComponent(server)+'&';
+  if(day)params+='day='+day+'&';
+  if(month)params+='month='+month+'&';
+  if(year)params+='year='+year+'&';
+  var tbody=document.getElementById('search-tbody');
+  var info=document.getElementById('search-info');
+  if(tbody)tbody.innerHTML=loadingRow(9);
+  if(info)info.textContent='';
+  fetch('/api/search?'+params).then(function(r){return r.json();}).then(function(d){
+    var results=Array.isArray(d)?d:(d.results||[]);
+    if(info)info.textContent=results.length+' result'+(results.length!==1?'s':'')+' found';
+    if(tbody)tbody.innerHTML=results.length?results.map(function(p,i){
+      return '<tr onclick="showPlayer('+p.id+')">'+
+        '<td class="tl"><span class="rn">'+(i+1)+'</span></td>'+
+        '<td class="tl"><div class="pcell"><div class="av">'+av(p.name)+'</div><span class="plink">'+esc(p.name)+'</span></div></td>'+
+        '<td>'+fmt(p.score)+'</td><td>'+fmtF(p.sr)+'</td>'+
+        '<td>'+fmt(p.kills)+'</td><td>'+fmt(p.deaths)+'</td>'+
+        '<td>'+kdHtml(p.kd)+'</td><td>'+fmt(p.tks)+'</td><td>'+fmt(p.rounds)+'</td></tr>';
+    }).join(''):errRow(9,'No results found');
+  }).catch(function(){
+    if(tbody)tbody.innerHTML=errRow(9,'Search failed');
+  });
+}
+
+// ── ADMIN ────────────────────────────────────────────────────────────────────────
+function initAdmin(){
+  if(adminToken){
+    // Verify token is still valid before showing panel
+    fetch('/api/admin/bans',{headers:{'X-Admin-Token':adminToken}}).then(function(r){
+      if(r.ok)showAdminPanel();
+      else{adminToken=null;try{sessionStorage.removeItem('bfv_admin_token');}catch(e){}showAdminLogin();}
+    }).catch(function(){showAdminLogin();});
+  }else showAdminLogin();
+}
+function showAdminLogin(){
+  setEl('admin-login-section','<div class="card" style="max-width:380px;margin:40px auto"><div class="card-hdr">Admin Login</div><div style="padding:18px;display:flex;flex-direction:column;gap:12px"><div style="font-size:11px;color:var(--lo);font-family:\'JetBrains Mono\',monospace">Enter admin password to continue</div><input class="ainput" type="password" id="admin-pw-input" placeholder="Password\u2026" onkeydown="if(event.key===\'Enter\')adminLogin()"><button class="abtn primary" onclick="adminLogin()">Login</button><div id="admin-login-err" style="color:var(--red);font-size:11px;min-height:16px"></div></div></div>');
+  var ps=document.getElementById('admin-panel-section');
+  if(ps)ps.style.display='none';
+}
+function showAdminPanel(){
+  var ls=document.getElementById('admin-login-section');
+  if(ls)ls.innerHTML='';
+  var ps=document.getElementById('admin-panel-section');
+  if(ps)ps.style.display='';
+  loadBans();loadParserLog();loadClanTags();
+}
+function adminLogin(){
+  var pw=(document.getElementById('admin-pw-input')||{}).value||'';
+  fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})}).then(function(r){
+    if(!r.ok)throw new Error('bad');
+    return r.json();
+  }).then(function(d){
+    adminToken=d.token;
+    try{sessionStorage.setItem('bfv_admin_token',adminToken);}catch(e){}
+    showAdminPanel();
+  }).catch(function(){setEl('admin-login-err','Invalid password');});
+}
+function adminLogout(){
+  try{fetch('/api/admin/logout',{method:'POST',headers:{'X-Admin-Token':adminToken||''}});}catch(e){}
+  adminToken=null;
+  try{sessionStorage.removeItem('bfv_admin_token');}catch(e){}
+  loaded['admin']=false;
+  initAdmin();
+}
+function loadBans(){
+  var el=document.getElementById('ban-list');
+  if(!el)return;
+  el.innerHTML='<div style="padding:12px;color:var(--lo);font-family:\'JetBrains Mono\',monospace;font-size:11px">Loading\u2026</div>';
+  fetch('/api/admin/bans',{headers:{'X-Admin-Token':adminToken||''}}).then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.length){el.innerHTML='<div style="padding:12px;color:var(--lo);font-family:\'JetBrains Mono\',monospace;font-size:11px">No active bans</div>';return;}
+    el.innerHTML='<div class="ban-row ban-hdr-row">'+
+      '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)">Player</div>'+
+      '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)">Reason</div>'+
+      '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)">Date</div>'+
+      '<div></div></div>'+
+      d.map(function(b){
+        return '<div class="ban-row">'+
+          '<div style="color:var(--hi);font-weight:600">'+esc(b.player_name)+'</div>'+
+          '<div style="color:var(--mid)">'+esc(b.reason||'\u2014')+'</div>'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--lo)">'+esc(b.created_at)+'</div>'+
+          '<button class="abtn safe" style="padding:4px 10px;font-size:10px" onclick="adminUnban('+b.id+')">Unban</button></div>';
+      }).join('');
+  }).catch(function(){if(el)el.innerHTML='<div style="padding:12px;color:var(--red)">Failed to load bans</div>';});
+}
+function adminBan(){
+  var name=(document.getElementById('ban-name')||{}).value||'';
+  var reason=(document.getElementById('ban-reason')||{}).value||'';
+  if(!name.trim())return;
+  fetch('/api/admin/ban',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':adminToken||''},body:JSON.stringify({name:name.trim(),reason:reason.trim()})}).then(function(r){
+    if(r.ok){var bn=document.getElementById('ban-name');var br=document.getElementById('ban-reason');if(bn)bn.value='';if(br)br.value='';loadBans();}
+    else alert('Failed to ban player');
+  }).catch(function(){alert('Error');});
+}
+function adminUnban(id){
+  if(!confirm('Unban this player?'))return;
+  fetch('/api/admin/ban/'+id,{method:'DELETE',headers:{'X-Admin-Token':adminToken||''}}).then(function(){loadBans();}).catch(function(){alert('Error');});
+}
+function loadClanTags(){
+  var el=document.getElementById('clan-tag-list');
+  if(!el)return;
+  fetch('/api/admin/clan-tags',{headers:{'X-Admin-Token':adminToken||''}}).then(function(r){return r.json();}).then(function(tags){
+    if(!tags.length){el.innerHTML='<div style="font-size:11px;color:var(--lo);font-family:\'JetBrains Mono\',monospace">No clan tags defined.</div>';return;}
+    el.innerHTML=tags.map(function(t){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2)">'+
+        '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--hi);flex:1">'+esc(t)+'</span>'+
+        '<button class="abtn danger" style="padding:3px 10px;font-size:10px" onclick="adminDeleteClanTag(\''+esc(t)+'\')">Remove</button></div>';
+    }).join('');
+  }).catch(function(){if(el)el.innerHTML='<div style="color:var(--red);font-size:11px">Failed to load</div>';});
+}
+function adminAddClanTag(){
+  var inp=document.getElementById('clan-tag-input');
+  var tag=(inp||{}).value||'';
+  if(!tag.trim())return;
+  fetch('/api/admin/clan-tags',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':adminToken||''},body:JSON.stringify({tag:tag.trim()})}).then(function(r){
+    if(!r.ok)throw new Error();
+    if(inp)inp.value='';
+    loadClanTags();
+  }).catch(function(){alert('Failed to add tag');});
+}
+function adminDeleteClanTag(tag){
+  fetch('/api/admin/clan-tags/'+encodeURIComponent(tag),{method:'DELETE',headers:{'X-Admin-Token':adminToken||''}}).then(function(r){
+    if(!r.ok)throw new Error();
+    loadClanTags();
+  }).catch(function(){alert('Failed to remove tag');});
+}
+function adminChangePassword(){
+  var pw=(document.getElementById('admin-pw-new')||{}).value||'';
+  if(!pw.trim())return;
+  fetch('/api/admin/change-password',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':adminToken||''},body:JSON.stringify({password:pw.trim()})}).then(function(r){
+    if(r.ok){var e=document.getElementById('admin-pw-new');if(e)e.value='';alert('Password updated');}
+    else alert('Failed');
+  }).catch(function(){alert('Error');});
+}
+function adminRunParser(){
+  var btn=document.getElementById('parser-btn');
+  if(btn)btn.disabled=true;
+  fetch('/api/admin/run-parser',{method:'POST',headers:{'X-Admin-Token':adminToken||''}}).then(function(){
+    setTimeout(loadParserLog,2000);
+  }).catch(function(){alert('Failed to run parser');}).finally(function(){if(btn)btn.disabled=false;});
+}
+function loadParserLog(){
+  var el=document.getElementById('parser-log');
+  if(!el)return;
+  fetch('/api/admin/parser-log',{headers:{'X-Admin-Token':adminToken||''}}).then(function(r){return r.json();}).then(function(d){
+    if(d.log)el.innerHTML=d.log.split('\n').map(function(l){
+      var c=(/[Ee]rror|[Ww]arning/.test(l))?'log-err':
+             (/[Ii]nserted|[Cc]omplete|OK/.test(l))?'log-ok':
+             (/[Ss]tarting|[Pp]arsing/.test(l))?'log-info':'log-dim';
+      return '<div class="'+c+'">'+esc(l)+'</div>';
+    }).join('');
+  }).catch(function(){});
+}
+
+// ── LIVE SCOREBOARD ──────────────────────────────────────────────────────────────
+function setLiveSort(s){
+  liveSort=s;
+  document.querySelectorAll('.live-sort-tab').forEach(function(t){
+    t.classList.toggle('active',t.textContent.toLowerCase()===s);
+  });
+}
+function fetchLive(){
+  fetch('/api/live').then(function(r){
+    if(!r.ok)throw new Error('offline');
+    return r.json();
+  }).then(function(d){
+    var dot=document.getElementById('live-dot');
+    if(dot){dot.className='live-dot';} // online = default blink
+    setEl('live-status-text',esc(d.server||'Online'));
+    setEl('live-last-update','Updated '+new Date().toLocaleTimeString());
+    setEl('live-map',esc(d.map_display||fmtMapName(d.map||'')||'\u2014'));
+    var lmImg=document.getElementById('live-map-img');
+    var lmFb=document.getElementById('live-map-img-fallback');
+    var imgSrc=mapImg(d.map||'');
+    if(lmImg&&lmFb){if(imgSrc){lmImg.src=imgSrc;lmImg.style.display='block';lmFb.style.display='none';}else{lmImg.style.display='none';lmFb.style.display='flex';}}
+    // update hero strip and header
+    var cnt=d.player_count||0;
+    setEl('hero-online',cnt+'');
+    var eo=document.getElementById('hero-online');
+    if(eo)eo.style.color=cnt>0?'var(--acc)':'var(--lo)';
+    setEl('header-online',cnt+' online');
+    if(d.public_host)setEl('header-addr',d.public_host+(d.public_port?':'+d.public_port:''));
+    var hs=document.getElementById('hero-status');
+    if(hs){hs.style.color='var(--green)';hs.textContent='\u25cf Online';}
+    setEl('live-players',(d.player_count||0)+'/'+(d.maxplayers||64));
+    setEl('live-players',(d.player_count||0)+'/'+(d.maxplayers||64));
+    setEl('us-tickets',d.tickets_team2!=null?d.tickets_team2:'\u2014');
+    setEl('nva-tickets',d.tickets_team1!=null?d.tickets_team1:'\u2014');
+    var usBadge=document.getElementById('us-winning-badge');
+    var nvaBadge=document.getElementById('nva-winning-badge');
+    if(usBadge)usBadge.style.display=((d.tickets_team2||0)>(d.tickets_team1||0))?'':'none';
+    if(nvaBadge)nvaBadge.style.display=((d.tickets_team1||0)>(d.tickets_team2||0))?'':'none';
+    if(d.players){
+      var usPl=(d.players||[]).filter(function(p){return p.team===2;}).sort(function(a,b){return(b[liveSort]||0)-(a[liveSort]||0);});
+      var nvaPl=(d.players||[]).filter(function(p){return p.team===1;}).sort(function(a,b){return(b[liveSort]||0)-(a[liveSort]||0);});
+      function plRow(p){
+        var kd=p.deaths?(p.kills/p.deaths).toFixed(2):'\u221e';
+        return '<tr onclick="showPlayer('+p.id+')"><td>'+esc(p.name)+'</td><td>'+(p.score||0)+'</td><td>'+(p.kills||0)+'</td><td>'+(p.deaths||0)+'</td><td>'+kd+'</td><td>'+(p.ping||'\u2014')+'</td></tr>';
+      }
+      var usEl=document.getElementById('us-players');
+      var nvaEl=document.getElementById('nva-players');
+      if(usEl)usEl.innerHTML=usPl.length?usPl.map(plRow).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--lo)">No players</td></tr>';
+      if(nvaEl)nvaEl.innerHTML=nvaPl.length?nvaPl.map(plRow).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--lo)">No players</td></tr>';
+      function sum(pl,f){return pl.reduce(function(a,b){return a+(b[f]||0);},0);}
+      var usT=document.getElementById('us-totals');
+      var nvaT=document.getElementById('nva-totals');
+      if(usT)usT.innerHTML='<td style="text-align:left;color:var(--lo)">Total</td><td>'+sum(usPl,'score')+'</td><td>'+sum(usPl,'kills')+'</td><td>'+sum(usPl,'deaths')+'</td><td>\u2014</td><td>\u2014</td>';
+      if(nvaT)nvaT.innerHTML='<td style="text-align:left;color:var(--lo)">Total</td><td>'+sum(nvaPl,'score')+'</td><td>'+sum(nvaPl,'kills')+'</td><td>'+sum(nvaPl,'deaths')+'</td><td>\u2014</td><td>\u2014</td>';
+    }
+    if(d.rounds){
+      var rh=document.getElementById('round-history-body');
+      if(rh)rh.innerHTML=(d.rounds||[]).slice(-10).reverse().map(function(r){
+        var w=r.winning_team===1?'<span class="winner-pill nva">\uD83C\uDDFB\uD83C\uDDF3 Red</span>':'<span class="winner-pill us">\uD83C\uDDFA\uD83C\uDDF8 Blue</span>';
+        return '<div class="rh-row"><div>'+esc(r.map||'\u2014')+'</div><div>'+w+'</div><div style="text-align:center">'+esc(r.duration||'\u2014')+'</div><div style="text-align:center">'+(r.players||'\u2014')+'</div><div style="text-align:right;font-size:9px;color:var(--lo)">'+esc(r.endtime||'')+'</div></div>';
+      }).join('');
+    }
+  }).catch(function(){
+    var dot=document.getElementById('live-dot');
+    if(dot)dot.className='live-dot offline';
+    setEl('live-status-text','Server offline');
+    setEl('header-online','offline');
+    var hs=document.getElementById('hero-status');
+    if(hs){hs.style.color='var(--lo)';hs.textContent='\u25cf Offline';}
+  });
+}
+function startLive(){fetchLive();liveTimer=setInterval(fetchLive,5000);}
+
+// ── INIT ────────────────────────────────────────────────────────────────────────
+function init(){
+  fetch('/api/maps').then(function(r){return r.json();}).then(function(maps){
+    maps.forEach(function(m){mapIndex[m.name]=m.id;});
+  }).catch(function(){});
+
+  loadSummary();
+  loadHeroMeta();
+  fetchLive();
+  loadRankings();
+  loadSidebarGames();
+  loadSidebarWeapons();
+  loadSidebarMaps();
+  initSearchForm();
+
+  // Restore page from URL hash on load/refresh
+  var hash=(window.location.hash||'').replace('#','');
+  if(hash){
+    var pm=hash.match(/^player-(\d+)$/);
+    var gm=hash.match(/^game-(\d+)$/);
+    var mm=hash.match(/^map-(.+)$/);
+    if(pm)showPlayer(parseInt(pm[1]),true);
+    else if(gm)showGame(parseInt(gm[1]),true);
+    else if(mm)showMap(mm[1],true);
+    else{
+      var validPages=['players','live','weapons','vehicles','maps','games','search','chars','admin'];
+      if(validPages.indexOf(hash)!==-1)nav(hash,true);
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
