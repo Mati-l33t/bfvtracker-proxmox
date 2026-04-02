@@ -29,9 +29,16 @@ nav{display:flex;gap:1px;flex:1;flex-wrap:wrap}
 nav a{padding:5px 12px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);border:1px solid transparent;border-radius:3px;transition:.12s;white-space:nowrap;cursor:pointer}
 nav a:hover{color:var(--hi);background:var(--bg3);border-color:var(--border)}
 nav a.active{color:var(--acc);background:var(--acc-glow);border-color:var(--acc2)}
-.btn-join{padding:5px 14px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;background:var(--acc);border:1px solid var(--acc);border-radius:3px;white-space:nowrap;cursor:pointer;text-decoration:none;animation:join-pulse 2s ease-in-out infinite}
-.btn-join:hover{color:#000;background:var(--hi);border-color:var(--hi);animation:none}
-@keyframes join-pulse{0%,100%{box-shadow:0 0 0 0 rgba(224,136,32,.7)}60%{box-shadow:0 0 0 7px rgba(224,136,32,0)}}
+.btn-join{padding:5px 14px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000 !important;background:var(--acc);border:1px solid var(--acc) !important;border-radius:3px;white-space:nowrap;cursor:pointer;text-decoration:none;position:relative;animation:join-pulse 1.8s ease-in-out infinite;flex-shrink:0}
+.btn-join:hover{background:#f4a83a !important;border-color:#f4a83a !important;animation:none;box-shadow:0 0 14px rgba(244,168,58,.7)}
+@keyframes join-pulse{0%{box-shadow:0 0 5px 1px rgba(224,136,32,.8),0 0 0 0 rgba(224,136,32,.6)}70%{box-shadow:0 0 5px 1px rgba(224,136,32,.8),0 0 0 10px rgba(224,136,32,0)}100%{box-shadow:0 0 5px 1px rgba(224,136,32,.8),0 0 0 0 rgba(224,136,32,0)}}
+.join-popup{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--bg3);border:1px solid var(--acc2);border-radius:4px;padding:10px 12px;min-width:220px;z-index:500;font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap}
+.join-popup.open{display:block}
+.join-popup .jp-title{color:var(--acc);font-weight:700;letter-spacing:1px;margin-bottom:6px;font-size:10px}
+.join-popup .jp-addr{color:var(--hi);font-size:13px;margin-bottom:8px}
+.join-popup .jp-hint{color:var(--mid);font-size:10px;margin-bottom:8px;line-height:1.5}
+.join-popup .jp-copy{padding:4px 10px;background:var(--acc2);color:var(--hi);border:none;border-radius:3px;cursor:pointer;font-size:10px;letter-spacing:1px;font-family:inherit;transition:.12s}
+.join-popup .jp-copy:hover{background:var(--acc);color:#000}
 .server-pill{margin-left:auto;display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(34,168,90,.08);border:1px solid rgba(34,168,90,.3);border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--green);white-space:nowrap;flex-shrink:0}
 .dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
@@ -547,7 +554,14 @@ footer span{color:var(--acc2)}
     <a onclick="nav('search')" id="nav-search">Search</a>
     <a onclick="nav('chars')" id="nav-chars">Characters</a>
     __FORUM_LINK__
-    <a href="bfvietnam://__BFV_HOST__:__BFV_GAME_PORT__" class="btn-join">JOIN</a>
+    <span class="btn-join" id="btn-join" onclick="toggleJoinPopup(event)">JOIN
+      <div class="join-popup" id="join-popup">
+        <div class="jp-title">&#9654; CONNECT TO SERVER</div>
+        <div class="jp-addr" id="join-popup-addr">—</div>
+        <div class="jp-hint">Open BFV &rarr; Multiplayer &rarr; Join IP<br>or paste in your server browser</div>
+        <button class="jp-copy" onclick="copyJoinAddr(event)">COPY IP</button>
+      </div>
+    </span>
     <a onclick="nav('admin')" id="nav-admin" style="color:var(--red)">Admin</a>
   </nav>
   <div class="server-pill">
@@ -1233,6 +1247,25 @@ footer span{color:var(--acc2)}
 </footer>
 
 <script>
+// ── JOIN POPUP ─────────────────────────────────────────────────────────────────
+function toggleJoinPopup(e){
+  e.stopPropagation();
+  var addr=document.getElementById('header-addr').textContent.trim();
+  document.getElementById('join-popup-addr').textContent=addr||'—';
+  document.getElementById('join-popup').classList.toggle('open');
+}
+function copyJoinAddr(e){
+  e.stopPropagation();
+  var addr=document.getElementById('header-addr').textContent.trim();
+  navigator.clipboard.writeText(addr).then(function(){
+    var b=e.target; b.textContent='COPIED!'; setTimeout(function(){b.textContent='COPY IP';},1500);
+  });
+}
+document.addEventListener('click',function(e){
+  if(!document.getElementById('btn-join').contains(e.target))
+    document.getElementById('join-popup').classList.remove('open');
+});
+
 // ── UTILITIES ──────────────────────────────────────────────────────────────────
 function esc(s){var d=document.createElement('div');d.textContent=String(s==null?'':s);return d.innerHTML;}
 function fmt(n){return(+(n||0)).toLocaleString();}
