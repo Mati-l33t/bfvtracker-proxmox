@@ -16,9 +16,8 @@ header()  { echo -e "\n${BOLD}${CYAN}=== $* ===${NC}\n"; }
 # ── Root check ────────────────────────────────────────────────────────────────
 [[ $EUID -ne 0 ]] && error "Run as root (sudo ./install.sh)"
 
-# ── Detect Debian ─────────────────────────────────────────────────────────────
-[[ -f /etc/debian_version ]] || error "This installer requires Debian/Ubuntu."
-DEBIAN_VERSION=$(cat /etc/debian_version | cut -d. -f1)
+# ── Detect Debian/Ubuntu ──────────────────────────────────────────────────────
+[[ -f /etc/debian_version ]] || error "This installer requires Debian or Ubuntu."
 
 # ── Repo base URL ─────────────────────────────────────────────────────────────
 REPO_RAW="https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main"
@@ -28,90 +27,107 @@ REPO_RAW="https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main"
 # ─────────────────────────────────────────────────────────────────────────────
 clear
 echo -e "${BOLD}"
-echo "  ██████╗ ███████╗██╗   ██╗    ████████╗██████╗  █████╗  ██████╗██╗  ██╗███████╗██████╗ "
-echo "  ██╔══██╗██╔════╝██║   ██║    ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗"
-echo "  ██████╔╝█████╗  ██║   ██║       ██║   ██████╔╝███████║██║     █████╔╝ █████╗  ██████╔╝"
-echo "  ██╔══██╗██╔══╝  ╚██╗ ██╔╝       ██║   ██╔══██╗██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗"
-echo "  ██████╔╝██║      ╚████╔╝        ██║   ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║"
-echo "  ╚═════╝ ╚═╝       ╚═══╝         ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝"
+cat <<'BANNER'
+  ██████╗ ███████╗██╗   ██╗    ████████╗██████╗  █████╗  ██████╗██╗  ██╗███████╗██████╗
+  ██╔══██╗██╔════╝██║   ██║    ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗
+  ██████╔╝█████╗  ██║   ██║       ██║   ██████╔╝███████║██║     █████╔╝ █████╗  ██████╔╝
+  ██╔══██╗██╔══╝  ╚██╗ ██╔╝       ██║   ██╔══██╗██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗
+  ██████╔╝██║      ╚████╔╝        ██║   ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║
+  ╚═════╝ ╚═╝       ╚═══╝         ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+BANNER
 echo -e "${NC}"
-echo -e "  Battlefield Vietnam Stats Tracker — LXC Installer"
+echo -e "  Battlefield Vietnam Stats Tracker — Installer"
 echo -e "  https://github.com/Mati-l33t/bfvtracker-proxmox\n"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURATION PROMPTS
 # ─────────────────────────────────────────────────────────────────────────────
-header "Configuration"
+header "Step 1 — Web UI"
 
-# UI choice
 echo -e "Which web UI would you like to install?\n"
 echo -e "  ${BOLD}1)${NC} Modern UI     — Dark SPA with live stats, rankings, admin panel (port 8080)"
 echo -e "  ${BOLD}2)${NC} Classic UI    — Original selectbf PHP stats page (port 8081)"
 echo -e "  ${BOLD}3)${NC} Both          — Modern on :8080, classic on :8081\n"
 while true; do
     read -rp "  Choice [1/2/3]: " UI_CHOICE
-    case "$UI_CHOICE" in
-        1|2|3) break ;;
-        *) warn "Please enter 1, 2, or 3." ;;
-    esac
+    case "$UI_CHOICE" in 1|2|3) break ;; *) warn "Please enter 1, 2, or 3." ;; esac
 done
 
-# Admin password (only needed for modern UI)
+# ─── Admin password (modern UI only) ─────────────────────────────────────────
 if [[ "$UI_CHOICE" != "2" ]]; then
-    echo ""
+    header "Step 2 — Admin password"
+    echo -e "  This password protects the admin panel (ban players, run parser, manage clans).\n"
     while true; do
-        read -rsp "  Admin password for web panel: " ADMIN_PASS; echo
-        read -rsp "  Confirm admin password:        " ADMIN_PASS2; echo
+        read -rsp "  Admin password: " ADMIN_PASS; echo
+        read -rsp "  Confirm:        " ADMIN_PASS2; echo
         [[ "$ADMIN_PASS" == "$ADMIN_PASS2" ]] && break
         warn "Passwords do not match. Try again."
     done
     [[ -z "$ADMIN_PASS" ]] && error "Admin password cannot be empty."
 fi
 
-# Server name
-echo ""
-read -rp "  Server display name [GmV AIR WARS]: " SERVER_NAME
-SERVER_NAME="${SERVER_NAME:-GmV AIR WARS}"
+# ─── Site branding ────────────────────────────────────────────────────────────
+if [[ "$UI_CHOICE" != "2" ]]; then
+    header "Step 3 — Site branding"
 
-# BFV game server host/ports
-read -rp "  BFV server host/IP [10.0.0.70]: " BFV_HOST
-BFV_HOST="${BFV_HOST:-10.0.0.70}"
+    read -rp "  Site / clan name (shown in the header and page title) [BFV Server]: " SITE_TITLE
+    SITE_TITLE="${SITE_TITLE:-BFV Server}"
 
-read -rp "  BFV game port [15567]: " BFV_GAME_PORT
-BFV_GAME_PORT="${BFV_GAME_PORT:-15567}"
+    read -rp "  Forum URL (leave blank to hide the Forum link): " FORUM_URL
 
-read -rp "  BFV GameSpy query port [23000]: " BFV_QUERY_PORT
-BFV_QUERY_PORT="${BFV_QUERY_PORT:-23000}"
+    read -rp "  Logo image URL (leave blank to skip — default logo used): " LOGO_URL
+fi
 
-# BFV log directory
-read -rp "  BFV log directory [/opt/bfv/mods/bfvietnam/logs]: " BFV_LOG_DIR
-BFV_LOG_DIR="${BFV_LOG_DIR:-/opt/bfv/mods/bfvietnam/logs}"
+# ─── BFV game server ──────────────────────────────────────────────────────────
+header "Step 4 — BFV game server"
+echo -e "  The stats tracker queries your BFV server for live status."
+echo -e "  The server can be on a different machine/LXC as long as it is reachable.\n"
 
-# Database config
-echo ""
-echo -e "  ${BOLD}Database configuration${NC}"
+read -rp "  BFV server host/IP: " BFV_HOST
+[[ -z "$BFV_HOST" ]] && error "BFV host is required."
+
+read -rp "  BFV game port [15567]: "         BFV_GAME_PORT;  BFV_GAME_PORT="${BFV_GAME_PORT:-15567}"
+read -rp "  BFV GameSpy query port [23000]: " BFV_QUERY_PORT; BFV_QUERY_PORT="${BFV_QUERY_PORT:-23000}"
+
+# ─── Log directory ────────────────────────────────────────────────────────────
+header "Step 5 — Log directory"
+echo -e "  The tracker parses BFV server log files to populate the stats database."
+echo -e "  The logs must be accessible from this machine."
+echo -e ""
+echo -e "  ${BOLD}If your BFV server is on the same machine:${NC}"
+echo -e "    Default BFV log path: /opt/bfv/mods/bfvietnam/logs"
+echo -e ""
+echo -e "  ${BOLD}If your BFV server is on a different machine (remote):${NC}"
+echo -e "    Set up rsync or sshfs to mount the remote log dir here first."
+echo -e "    See README.md — 'Getting logs from a remote BFV server'.\n"
+
+read -rp "  Path to BFV log directory: " BFV_LOG_DIR
+[[ -z "$BFV_LOG_DIR" ]] && error "Log directory path is required."
+
+# ─── Database ────────────────────────────────────────────────────────────────
+header "Step 6 — Database"
+echo -e "  MariaDB will be installed and configured automatically.\n"
+
+read -rp "  DB name [bfvstats]: " DB_NAME; DB_NAME="${DB_NAME:-bfvstats}"
+read -rp "  DB user [bfvstats]: " DB_USER; DB_USER="${DB_USER:-bfvstats}"
+DB_PASS_DEFAULT=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24 || true)
+read -rsp "  DB password [auto-generate]: " DB_PASS; echo
+DB_PASS="${DB_PASS:-$DB_PASS_DEFAULT}"
 read -rp "  DB host [localhost]: " DB_HOST; DB_HOST="${DB_HOST:-localhost}"
 read -rp "  DB port [3306]: "      DB_PORT; DB_PORT="${DB_PORT:-3306}"
-read -rp "  DB name [bfvstats]: "  DB_NAME; DB_NAME="${DB_NAME:-bfvstats}"
-read -rp "  DB user [bfvstats]: "  DB_USER; DB_USER="${DB_USER:-bfvstats}"
-
-# Auto-generate a DB password if not provided
-DB_PASS_DEFAULT=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24 || true)
-read -rsp "  DB password [auto-generated]: " DB_PASS; echo
-DB_PASS="${DB_PASS:-$DB_PASS_DEFAULT}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SUMMARY
 # ─────────────────────────────────────────────────────────────────────────────
-header "Summary"
+header "Summary — review before installing"
 case "$UI_CHOICE" in
     1) UI_DESC="Modern UI only (port 8080)" ;;
     2) UI_DESC="Classic selectbf UI only (port 8081)" ;;
     3) UI_DESC="Both UIs (modern :8080, classic :8081)" ;;
 esac
-
 echo -e "  UI:           ${BOLD}$UI_DESC${NC}"
-echo -e "  Server name:  $SERVER_NAME"
+[[ "$UI_CHOICE" != "2" ]] && echo -e "  Site name:    $SITE_TITLE"
+[[ "$UI_CHOICE" != "2" && -n "${FORUM_URL:-}" ]] && echo -e "  Forum URL:    $FORUM_URL"
 echo -e "  BFV host:     $BFV_HOST  game:$BFV_GAME_PORT  query:$BFV_QUERY_PORT"
 echo -e "  Log dir:      $BFV_LOG_DIR"
 echo -e "  DB:           $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME"
@@ -120,7 +136,7 @@ read -rp "  Proceed with installation? [y/N]: " CONFIRM
 [[ "${CONFIRM,,}" == "y" ]] || { info "Aborted."; exit 0; }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# INSTALL DEPENDENCIES
+# SYSTEM PACKAGES
 # ─────────────────────────────────────────────────────────────────────────────
 header "Installing system packages"
 export DEBIAN_FRONTEND=noninteractive
@@ -136,24 +152,18 @@ apt-get install -y -qq \
     unzip
 
 if [[ "$UI_CHOICE" != "1" ]]; then
-    # Classic UI needs PHP
     info "Installing PHP for classic UI..."
     apt-get install -y -qq \
-        php \
-        php-fpm \
-        php-mysql \
-        php-mbstring \
-        php-xml \
-        php-gd
-    PHP_FPM_SOCK=$(ls /run/php/php*-fpm.sock 2>/dev/null | head -1 || echo "/run/php/php8.2-fpm.sock")
+        php php-fpm php-mysql php-mbstring php-xml php-gd
     PHP_VER=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || echo "8.2")
+    PHP_FPM_SOCK="/run/php/php${PHP_VER}-fpm.sock"
 fi
 success "System packages installed."
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MARIADB SETUP
+# MARIADB
 # ─────────────────────────────────────────────────────────────────────────────
-header "Setting up MariaDB"
+header "Configuring MariaDB"
 systemctl enable --quiet mariadb
 systemctl start mariadb
 
@@ -166,35 +176,35 @@ SQL
 success "Database '${DB_NAME}' and user '${DB_USER}' ready."
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SELECTBF INSTALL (classic or both)
+# SELECTBF (classic UI)
 # ─────────────────────────────────────────────────────────────────────────────
 if [[ "$UI_CHOICE" != "1" ]]; then
     header "Installing selectbf (classic UI)"
     SELECTBF_DIR="/var/www/selectbf"
     mkdir -p "$SELECTBF_DIR"
 
-    # Download selectbf — try to grab a known release or fall back to cloning
     SELECTBF_ZIP_URL="https://github.com/select-bf/selectbf/archive/refs/heads/master.zip"
     info "Downloading selectbf..."
     if curl -fsSL "$SELECTBF_ZIP_URL" -o /tmp/selectbf.zip 2>/dev/null; then
         unzip -q /tmp/selectbf.zip -d /tmp/selectbf_src
-        SRC_DIR=$(ls -d /tmp/selectbf_src/selectbf-*/ 2>/dev/null | head -1)
-        if [[ -d "$SRC_DIR" ]]; then
+        SRC_DIR=$(ls -d /tmp/selectbf_src/selectbf-*/ 2>/dev/null | head -1 || true)
+        if [[ -d "${SRC_DIR:-}" ]]; then
             cp -r "$SRC_DIR"/* "$SELECTBF_DIR/"
+            success "selectbf files extracted."
         fi
         rm -rf /tmp/selectbf.zip /tmp/selectbf_src
     else
         warn "Could not download selectbf automatically."
-        warn "Place selectbf files in $SELECTBF_DIR manually and re-run: systemctl restart nginx php${PHP_VER}-fpm"
+        warn "Place selectbf files in $SELECTBF_DIR manually, then: systemctl restart nginx php${PHP_VER}-fpm"
     fi
 
-    # Write selectbf config if config.php exists
     SELECTBF_CFG="$SELECTBF_DIR/config.php"
     if [[ -f "$SELECTBF_CFG" ]]; then
-        sed -i "s/define('DB_HOST'.*/define('DB_HOST', '${DB_HOST}');/" "$SELECTBF_CFG" || true
-        sed -i "s/define('DB_USER'.*/define('DB_USER', '${DB_USER}');/" "$SELECTBF_CFG" || true
-        sed -i "s/define('DB_PASS'.*/define('DB_PASS', '${DB_PASS}');/" "$SELECTBF_CFG" || true
-        sed -i "s/define('DB_NAME'.*/define('DB_NAME', '${DB_NAME}');/" "$SELECTBF_CFG" || true
+        sed -i "s/define('DB_HOST'.*/define('DB_HOST', '${DB_HOST}');/"   "$SELECTBF_CFG" || true
+        sed -i "s/define('DB_USER'.*/define('DB_USER', '${DB_USER}');/"   "$SELECTBF_CFG" || true
+        sed -i "s/define('DB_PASS'.*/define('DB_PASS', '${DB_PASS}');/"   "$SELECTBF_CFG" || true
+        sed -i "s/define('DB_NAME'.*/define('DB_NAME', '${DB_NAME}');/"   "$SELECTBF_CFG" || true
+        sed -i "s/define('LOG_DIR'.*/define('LOG_DIR', '${BFV_LOG_DIR}');/" "$SELECTBF_CFG" || true
     fi
 
     chown -R www-data:www-data "$SELECTBF_DIR"
@@ -202,17 +212,17 @@ if [[ "$UI_CHOICE" != "1" ]]; then
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MODERN UI INSTALL
+# MODERN UI + FASTAPI
 # ─────────────────────────────────────────────────────────────────────────────
 if [[ "$UI_CHOICE" != "2" ]]; then
     header "Installing modern UI + FastAPI backend"
 
-    # Python venv
     INSTALL_DIR="/opt/bfvstats"
-    mkdir -p "$INSTALL_DIR"
-    python3 -m venv "$INSTALL_DIR/venv"
+    WEB_DIR="/var/www/bfvstats"
+    mkdir -p "$INSTALL_DIR" "$WEB_DIR"
 
-    # requirements.txt
+    # Python venv
+    python3 -m venv "$INSTALL_DIR/venv"
     curl -fsSL "${REPO_RAW}/requirements.txt" -o "$INSTALL_DIR/requirements.txt"
     "$INSTALL_DIR/venv/bin/pip" install -q --upgrade pip
     "$INSTALL_DIR/venv/bin/pip" install -q -r "$INSTALL_DIR/requirements.txt"
@@ -222,13 +232,48 @@ if [[ "$UI_CHOICE" != "2" ]]; then
     curl -fsSL "${REPO_RAW}/web/api.py" -o "$INSTALL_DIR/api.py"
     success "api.py installed."
 
-    # frontend
-    WEB_DIR="/var/www/bfvstats"
-    mkdir -p "$WEB_DIR"
+    # index.html — download then patch placeholders
     curl -fsSL "${REPO_RAW}/web/index.html" -o "$WEB_DIR/index.html"
-    success "index.html installed."
 
-    # Generate admin password hash  (salt:sha256)
+    # Build forum link HTML (empty = hidden)
+    if [[ -n "${FORUM_URL:-}" ]]; then
+        FORUM_LINK="<a href=\"${FORUM_URL}\" target=\"_blank\" rel=\"noopener\">Forum</a>"
+    else
+        FORUM_LINK=""
+    fi
+
+    # Logo: download custom or use inline SVG fallback
+    if [[ -n "${LOGO_URL:-}" ]]; then
+        LOGO_FILE="logo.png"
+        if curl -fsSL "$LOGO_URL" -o "$WEB_DIR/$LOGO_FILE" 2>/dev/null; then
+            success "Custom logo downloaded."
+        else
+            warn "Could not download logo from $LOGO_URL — using default."
+            LOGO_FILE="logo-default.svg"
+            # Minimal SVG shield as fallback
+            cat > "$WEB_DIR/$LOGO_FILE" <<'SVG'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M16 2L4 7v9c0 7 5.3 13.1 12 15 6.7-1.9 12-8 12-15V7z" fill="#e08820"/><text x="16" y="20" text-anchor="middle" fill="#fff" font-size="10" font-family="sans-serif" font-weight="bold">BFV</text></svg>
+SVG
+        fi
+    else
+        LOGO_FILE="logo-default.svg"
+        cat > "$WEB_DIR/$LOGO_FILE" <<'SVG'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M16 2L4 7v9c0 7 5.3 13.1 12 15 6.7-1.9 12-8 12-15V7z" fill="#e08820"/><text x="16" y="20" text-anchor="middle" fill="#fff" font-size="10" font-family="sans-serif" font-weight="bold">BFV</text></svg>
+SVG
+    fi
+
+    # Patch placeholders in index.html (use | as sed delimiter to avoid URL slash issues)
+    sed -i \
+        -e "s|__SITE_TITLE__|${SITE_TITLE}|g" \
+        -e "s|__LOGO_FILE__|${LOGO_FILE}|g" \
+        -e "s|__FORUM_LINK__|${FORUM_LINK}|g" \
+        -e "s|__SERVER_NAME__|${SERVER_NAME:-${SITE_TITLE}}|g" \
+        -e "s|__BFV_HOST__|${BFV_HOST}|g" \
+        -e "s|__BFV_GAME_PORT__|${BFV_GAME_PORT}|g" \
+        "$WEB_DIR/index.html"
+    success "index.html patched with site settings."
+
+    # Admin password hash  (salt:sha256)
     ADMIN_SALT=$(tr -dc 'a-f0-9' </dev/urandom | head -c 16 || true)
     ADMIN_HASH=$(echo -n "${ADMIN_SALT}${ADMIN_PASS}" | sha256sum | cut -d' ' -f1)
 
@@ -252,7 +297,7 @@ ENV
     chown -R www-data:www-data "$INSTALL_DIR" "$WEB_DIR"
     success ".env written."
 
-    # DB schema — create clan_tags table and performance indexes
+    # DB schema extras
     mysql -u root "$DB_NAME" <<SQL
 CREATE TABLE IF NOT EXISTS selectbf_clan_tags (
     id    INT AUTO_INCREMENT PRIMARY KEY,
@@ -260,12 +305,11 @@ CREATE TABLE IF NOT EXISTS selectbf_clan_tags (
     added DATETIME DEFAULT NOW()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Performance indexes (safe to run if they already exist)
 CREATE INDEX IF NOT EXISTS idx_ps_round_id     ON selectbf_playerstats (round_id);
 CREATE INDEX IF NOT EXISTS idx_games_starttime ON selectbf_games       (starttime);
 CREATE INDEX IF NOT EXISTS idx_rounds_game_id  ON selectbf_rounds      (game_id);
 SQL
-    success "DB schema / indexes applied."
+    success "DB schema and indexes applied."
 
     # systemd service
     curl -fsSL "${REPO_RAW}/systemd/bfvstats-api.service" \
@@ -277,43 +321,34 @@ SQL
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# NGINX CONFIG
+# NGINX
 # ─────────────────────────────────────────────────────────────────────────────
 header "Configuring nginx"
-
-# Remove default site
 rm -f /etc/nginx/sites-enabled/default
 
 case "$UI_CHOICE" in
     1)
         curl -fsSL "${REPO_RAW}/config/nginx-modern.conf" \
             -o /etc/nginx/sites-available/bfvstats
-        ln -sfn /etc/nginx/sites-available/bfvstats \
-                /etc/nginx/sites-enabled/bfvstats
+        ln -sfn /etc/nginx/sites-available/bfvstats /etc/nginx/sites-enabled/bfvstats
         rm -f /etc/nginx/sites-enabled/selectbf
         ;;
     2)
-        # Patch PHP socket into classic config before writing
-        CLASSIC_CONF=$(curl -fsSL "${REPO_RAW}/config/nginx-classic.conf")
-        echo "$CLASSIC_CONF" \
+        curl -fsSL "${REPO_RAW}/config/nginx-classic.conf" \
             | sed "s|php8.4-fpm.sock|php${PHP_VER}-fpm.sock|g" \
             > /etc/nginx/sites-available/selectbf
-        ln -sfn /etc/nginx/sites-available/selectbf \
-                /etc/nginx/sites-enabled/selectbf
+        ln -sfn /etc/nginx/sites-available/selectbf /etc/nginx/sites-enabled/selectbf
         rm -f /etc/nginx/sites-enabled/bfvstats
         ;;
     3)
         curl -fsSL "${REPO_RAW}/config/nginx-modern.conf" \
             -o /etc/nginx/sites-available/bfvstats
-        ln -sfn /etc/nginx/sites-available/bfvstats \
-                /etc/nginx/sites-enabled/bfvstats
+        ln -sfn /etc/nginx/sites-available/bfvstats /etc/nginx/sites-enabled/bfvstats
 
-        CLASSIC_CONF=$(curl -fsSL "${REPO_RAW}/config/nginx-classic.conf")
-        echo "$CLASSIC_CONF" \
+        curl -fsSL "${REPO_RAW}/config/nginx-classic.conf" \
             | sed "s|php8.4-fpm.sock|php${PHP_VER}-fpm.sock|g" \
             > /etc/nginx/sites-available/selectbf
-        ln -sfn /etc/nginx/sites-available/selectbf \
-                /etc/nginx/sites-enabled/selectbf
+        ln -sfn /etc/nginx/sites-available/selectbf /etc/nginx/sites-enabled/selectbf
         ;;
 esac
 
@@ -323,31 +358,30 @@ success "nginx configured and restarted."
 if [[ "$UI_CHOICE" != "1" ]]; then
     systemctl enable --quiet "php${PHP_VER}-fpm"
     systemctl restart "php${PHP_VER}-fpm"
-    success "php-fpm restarted."
+    success "php${PHP_VER}-fpm restarted."
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DONE
 # ─────────────────────────────────────────────────────────────────────────────
-header "Installation complete"
+header "Installation complete!"
 HOST_IP=$(hostname -I | awk '{print $1}')
 
+echo -e "  ${BOLD}Your stats tracker is ready.${NC}\n"
 case "$UI_CHOICE" in
-    1)
-        echo -e "  Modern UI:   ${BOLD}http://${HOST_IP}:8080/${NC}"
-        echo -e "  Admin panel: click ${BOLD}Admin${NC} in the nav bar, password: ${BOLD}(what you entered)${NC}"
-        ;;
-    2)
-        echo -e "  Classic UI:  ${BOLD}http://${HOST_IP}:8081/${NC}"
-        ;;
-    3)
-        echo -e "  Modern UI:   ${BOLD}http://${HOST_IP}:8080/${NC}"
-        echo -e "  Classic UI:  ${BOLD}http://${HOST_IP}:8081/${NC}"
-        echo -e "  Admin panel: click ${BOLD}Admin${NC} in the modern UI nav bar"
-        ;;
+    1) echo -e "  Modern UI:   ${BOLD}http://${HOST_IP}:8080/${NC}" ;;
+    2) echo -e "  Classic UI:  ${BOLD}http://${HOST_IP}:8081/${NC}" ;;
+    3) echo -e "  Modern UI:   ${BOLD}http://${HOST_IP}:8080/${NC}"
+       echo -e "  Classic UI:  ${BOLD}http://${HOST_IP}:8081/${NC}" ;;
 esac
-
 echo ""
-echo -e "  ${YELLOW}Note:${NC} The BFV server log parser runs via the admin panel."
-echo -e "  Point your BFV dedicated server logs at: ${BOLD}${BFV_LOG_DIR}${NC}"
+if [[ "$UI_CHOICE" != "2" ]]; then
+    echo -e "  ${BOLD}Admin panel:${NC} click ${BOLD}Admin${NC} in the nav bar and enter your password."
+    echo -e "  ${BOLD}Run parser:${NC}  Admin → Run Parser to import existing log files."
+fi
+echo ""
+echo -e "  ${YELLOW}Tip:${NC} Save your DB password — it was written to /opt/bfvstats/.env"
+if [[ "${DB_PASS}" == "${DB_PASS_DEFAULT:-}" ]]; then
+    echo -e "  ${YELLOW}Auto-generated DB password:${NC} ${BOLD}${DB_PASS}${NC}"
+fi
 echo ""

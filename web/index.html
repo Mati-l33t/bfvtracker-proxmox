@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BFV Stats — GmV Server</title>
+<title>BFV Stats — __SITE_TITLE__</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -521,8 +521,8 @@ footer span{color:var(--acc2)}
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="logo" onclick="nav('players')" style="cursor:pointer">
-    <img src="/gmv-logo.png" alt="GmV" style="width:32px;height:32px;object-fit:contain">
-    <div class="logo-text">GmV <span>STATS</span></div>
+    <img src="/__LOGO_FILE__" alt="__SITE_TITLE__" style="width:32px;height:32px;object-fit:contain">
+    <div class="logo-text">__SITE_TITLE__ <span>STATS</span></div>
   </div>
   <nav>
     <a onclick="nav('players')" id="nav-players" class="active">Players</a>
@@ -533,12 +533,12 @@ footer span{color:var(--acc2)}
     <a onclick="nav('games')" id="nav-games">Games</a>
     <a onclick="nav('search')" id="nav-search">Search</a>
     <a onclick="nav('chars')" id="nav-chars">Characters</a>
-    <a href="https://forum.gmvclan.com/" target="_blank" rel="noopener">Forum</a>
+    __FORUM_LINK__
     <a onclick="nav('admin')" id="nav-admin" style="color:var(--red)">Admin</a>
   </nav>
   <div class="server-pill">
     <div class="dot"></div>
-    <span class="pill-name">-{GmV}- AIR WARS</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">10.0.0.70:15567</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
+    <span class="pill-name">__SERVER_NAME__</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">__BFV_HOST__:__BFV_GAME_PORT__</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
   </div>
 </header>
 
@@ -1227,8 +1227,8 @@ footer span{color:var(--acc2)}
 </div>
 
 <footer>
-  -{GmV}- Battlefield Vietnam Stats &nbsp;·&nbsp;
-  <a href="https://github.com/Mati-l33t" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:none;transition:.12s" onmouseover="this.style.color='var(--hi)'" onmouseout="this.style.color='var(--acc)'">-{GmV}- m@gic</a>
+  __SITE_TITLE__ Battlefield Vietnam Stats &nbsp;·&nbsp;
+  <a href="https://github.com/Mati-l33t/bfvtracker-proxmox" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:none;transition:.12s" onmouseover="this.style.color='var(--hi)'" onmouseout="this.style.color='var(--acc)'">bfvtracker-proxmox</a>
   © 2026 &nbsp;·&nbsp; Some rights reserved &nbsp;·&nbsp; v2.0
 </footer>
 
