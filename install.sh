@@ -53,20 +53,22 @@ while true; do
     case "$UI_CHOICE" in 1|2|3) break ;; *) warn "Please enter 1, 2, or 3." ;; esac
 done
 
-# ─── Admin password (modern UI only) ─────────────────────────────────────────
-if [[ "$UI_CHOICE" != "2" ]]; then
-    header "Step 2 — Admin password"
-    echo -e "  This password protects the admin panel (ban players, run parser, manage clans).\n"
-    while true; do
-        read -rsp "  Admin password: " ADMIN_PASS; echo
-        read -rsp "  Confirm:        " ADMIN_PASS2; echo
-        [[ "$ADMIN_PASS" == "$ADMIN_PASS2" ]] && break
-        warn "Passwords do not match. Try again."
-    done
-    [[ -z "$ADMIN_PASS" ]] && error "Admin password cannot be empty."
-fi
+# ─── Admin password (both UIs need one) ──────────────────────────────────────
+header "Step 2 — Admin password"
+case "$UI_CHOICE" in
+    1) echo -e "  Protects the modern UI admin panel (ban players, run parser, manage clans).\n" ;;
+    2) echo -e "  Protects the classic selectbf admin panel.\n" ;;
+    3) echo -e "  One password used for both the modern UI panel and the classic selectbf admin.\n" ;;
+esac
+while true; do
+    read -rsp "  Admin password: " ADMIN_PASS; echo
+    read -rsp "  Confirm:        " ADMIN_PASS2; echo
+    [[ "$ADMIN_PASS" == "$ADMIN_PASS2" ]] && break
+    warn "Passwords do not match. Try again."
+done
+[[ -z "$ADMIN_PASS" ]] && error "Admin password cannot be empty."
 
-# ─── Site branding ────────────────────────────────────────────────────────────
+# ─── Site branding (modern UI only) ──────────────────────────────────────────
 if [[ "$UI_CHOICE" != "2" ]]; then
     header "Step 3 — Site branding"
 
@@ -128,6 +130,7 @@ esac
 echo -e "  UI:           ${BOLD}$UI_DESC${NC}"
 [[ "$UI_CHOICE" != "2" ]] && echo -e "  Site name:    $SITE_TITLE"
 [[ "$UI_CHOICE" != "2" && -n "${FORUM_URL:-}" ]] && echo -e "  Forum URL:    $FORUM_URL"
+echo -e "  Admin pass:   (set)"
 echo -e "  BFV host:     $BFV_HOST  game:$BFV_GAME_PORT  query:$BFV_QUERY_PORT"
 echo -e "  Log dir:      $BFV_LOG_DIR"
 echo -e "  DB:           $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME"
@@ -198,17 +201,94 @@ if [[ "$UI_CHOICE" != "1" ]]; then
         warn "Place selectbf files in $SELECTBF_DIR manually, then: systemctl restart nginx php${PHP_VER}-fpm"
     fi
 
-    SELECTBF_CFG="$SELECTBF_DIR/config.php"
-    if [[ -f "$SELECTBF_CFG" ]]; then
-        sed -i "s/define('DB_HOST'.*/define('DB_HOST', '${DB_HOST}');/"   "$SELECTBF_CFG" || true
-        sed -i "s/define('DB_USER'.*/define('DB_USER', '${DB_USER}');/"   "$SELECTBF_CFG" || true
-        sed -i "s/define('DB_PASS'.*/define('DB_PASS', '${DB_PASS}');/"   "$SELECTBF_CFG" || true
-        sed -i "s/define('DB_NAME'.*/define('DB_NAME', '${DB_NAME}');/"   "$SELECTBF_CFG" || true
-        sed -i "s/define('LOG_DIR'.*/define('LOG_DIR', '${BFV_LOG_DIR}');/" "$SELECTBF_CFG" || true
-    fi
+    # Write DB connection settings (selectbf uses include/sql_setting.php)
+    cat > "$SELECTBF_DIR/include/sql_setting.php" <<PHP
+<?php
+\$SQL_host     = '${DB_HOST}';
+\$SQL_user     = '${DB_USER}';
+\$SQL_password = '${DB_PASS}';
+\$SQL_datenbank = '${DB_NAME}';
+?>
+PHP
+
+    # Run selectbf's own setup: create all tables, insert admin password (MD5) and default params
+    SELECTBF_ADMIN_MD5=$(echo -n "$ADMIN_PASS" | md5sum | cut -d' ' -f1)
+    mysql -u root "$DB_NAME" <<SQL
+-- selectbf core tables
+CREATE TABLE IF NOT EXISTS \`selectbf_admin\` (\`id\` int(10) NOT NULL auto_increment, \`name\` text, \`value\` text, \`inserttime\` datetime default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_cache_chartypeusage\` (\`kit\` varchar(255) NOT NULL default '', \`percentage\` float default NULL, \`times_used\` int(10) default NULL, PRIMARY KEY (\`kit\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_cache_mapstats\` (\`map\` varchar(100) NOT NULL default '0', \`wins_team1\` int(10) default NULL, \`wins_team2\` int(10) default NULL, \`win_team1_tickets_team1\` float default NULL, \`win_team1_tickets_team2\` float default NULL, \`win_team2_tickets_team1\` float default NULL, \`win_team2_tickets_team2\` float default NULL, \`score_team1\` int(10) default NULL, \`score_team2\` int(10) default NULL, \`kills_team1\` int(10) default NULL, \`kills_team2\` int(10) default NULL, \`deaths_team1\` int(10) default NULL, \`deaths_team2\` int(10) default NULL, \`attacks_team1\` int(10) default NULL, \`attacks_team2\` int(10) default NULL, \`captures_team1\` int(10) default NULL, \`captures_team2\` int(10) default NULL, PRIMARY KEY (\`map\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_cache_ranking\` (\`rank\` int(10) default NULL, \`player_id\` int(10) NOT NULL default '0', \`playername\` varchar(100) default NULL, \`score\` int(10) default NULL, \`kills\` int(10) default NULL, \`deaths\` int(10) default NULL, \`kdrate\` double default NULL, \`score_per_minute\` double default NULL, \`tks\` int(10) default NULL, \`captures\` int(10) default NULL, \`attacks\` int(10) default NULL, \`defences\` int(10) default NULL, \`objectives\` int(10) default NULL, \`objectivetks\` int(10) default NULL, \`heals\` int(10) default NULL, \`selfheals\` int(10) default NULL, \`repairs\` int(10) default NULL, \`otherrepairs\` int(10) default NULL, \`first\` int(10) default NULL, \`second\` int(10) default NULL, \`third\` int(10) default NULL, \`playtime\` double default NULL, \`rounds_played\` int(10) default NULL, \`last_visit\` datetime default NULL, PRIMARY KEY (\`player_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_cache_vehicletime\` (\`vehicle\` varchar(100) NOT NULL default '', \`time\` float default NULL, \`percentage_time\` float default NULL, \`times_used\` int(10) default NULL, \`percentage_usage\` float default NULL, PRIMARY KEY (\`vehicle\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_cache_weaponkills\` (\`weapon\` varchar(50) NOT NULL default '', \`kills\` int(10) default NULL, \`percentage\` float default NULL, PRIMARY KEY (\`weapon\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_category\` (\`id\` int(10) NOT NULL auto_increment, \`name\` varchar(50) default NULL, \`collect_data\` int(10) default NULL, \`datasource_name\` varchar(50) default NULL, \`type\` varchar(50) default NULL, \`inserttime\` datetime default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_categorymember\` (\`member\` varchar(50) default NULL, \`category\` int(10) default NULL) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_chatlog\` (\`Id\` int(10) NOT NULL auto_increment, \`text\` text NOT NULL, \`player_id\` smallint(10) NOT NULL default '0', \`round_id\` int(10) default NULL, \`inserttime\` datetime default NULL, PRIMARY KEY (\`Id\`), KEY \`player_id\` (\`player_id\`), KEY \`round_id\` (\`round_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_clan_ranking\` (\`ranks\` int(10) default NULL, \`score\` float default NULL, \`clanname\` varchar(100) default NULL, \`members\` int(10) default NULL, \`kills\` float default NULL, \`deaths\` float default NULL, \`kdrate\` float default NULL, \`tks\` float default NULL, \`captures\` float default NULL, \`attacks\` float default NULL, \`defences\` float default NULL, \`objectives\` float default NULL, \`objectivetks\` float default NULL, \`heals\` float default NULL, \`selfheals\` float default NULL, \`repairs\` float default NULL, \`otherrepairs\` float default NULL, \`rounds_played\` float default NULL, \`first\` int(11) default NULL, \`second\` int(11) default NULL, \`third\` int(11) default NULL) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_clan_tags\` (\`clan_tag\` varchar(100) default NULL) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_cleartext\` (\`id\` int(10) NOT NULL auto_increment, \`original\` varchar(50) default NULL, \`custom\` varchar(100) default NULL, \`type\` varchar(50) default NULL, \`inserttime\` datetime default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_drives\` (\`id\` int(10) NOT NULL auto_increment, \`player_id\` int(10) default NULL, \`vehicle\` tinytext, \`drivetime\` float default '0', \`times_used\` int(10) default '0', PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`player_id\`), KEY \`player_id\` (\`player_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_games\` (\`id\` int(10) NOT NULL auto_increment, \`servername\` tinytext, \`modid\` tinytext, \`mapid\` tinytext, \`map\` tinytext, \`game_mode\` tinytext, \`gametime\` int(10) default NULL, \`maxplayers\` int(10) default NULL, \`scorelimit\` int(10) default NULL, \`spawntime\` int(10) default NULL, \`soldierff\` int(10) default NULL, \`vehicleff\` int(10) default NULL, \`tkpunish\` int(10) default NULL, \`deathcamtype\` int(10) default NULL, \`starttime\` datetime default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_heals\` (\`id\` int(10) NOT NULL auto_increment, \`player_id\` int(10) default NULL, \`healed_player_id\` int(10) default NULL, \`amount\` int(10) default NULL, \`healtime\` float default NULL, \`times_healed\` int(10) default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`player_id\`,\`healed_player_id\`), KEY \`player_id\` (\`player_id\`), KEY \`healed_player_id\` (\`healed_player_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_kills_player\` (\`id\` int(10) NOT NULL auto_increment, \`player_id\` int(10) default NULL, \`victim_id\` int(10) default NULL, \`times_killed\` int(10) default '0', PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`player_id\`,\`victim_id\`), KEY \`player_id\` (\`player_id\`), KEY \`victim_id\` (\`victim_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_kills_weapon\` (\`id\` int(10) NOT NULL auto_increment, \`player_id\` int(10) default NULL, \`weapon\` varchar(50) default '0', \`times_used\` int(10) default '0', PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`player_id\`,\`weapon\`), KEY \`player_id\` (\`player_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_kits\` (\`id\` int(10) NOT NULL auto_increment, \`player_id\` int(10) default NULL, \`kit\` text, \`times_used\` int(10) default '0', PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`player_id\`), KEY \`player_id\` (\`player_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_modassignment\` (\`id\` int(10) NOT NULL auto_increment, \`item\` varchar(50) default NULL, \`mod\` varchar(50) default NULL, \`type\` varchar(50) default NULL, \`inserttime\` datetime default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_nicknames\` (\`nickname\` varchar(150) default NULL, \`times_used\` int(10) default NULL, \`player_id\` int(10) default NULL, KEY \`player_id\` (\`player_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_params\` (\`id\` int(10) NOT NULL auto_increment, \`name\` varchar(50) default NULL, \`value\` varchar(255) default NULL, \`inserttime\` datetime default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_players\` (\`id\` int(10) NOT NULL auto_increment, \`name\` varchar(150) default NULL, \`keyhash\` varchar(32) NOT NULL default '', \`inserttime\` datetime default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_playerstats\` (\`id\` int(10) NOT NULL auto_increment, \`player_id\` int(10) default NULL, \`team\` int(10) default NULL, \`score\` int(10) default NULL, \`kills\` int(10) default NULL, \`deaths\` int(10) default NULL, \`tks\` int(10) default NULL, \`captures\` int(10) default NULL, \`attacks\` int(10) default NULL, \`defences\` int(10) default NULL, \`objectives\` int(10) default NULL, \`objectivetks\` int(10) default NULL, \`heals\` int(10) default NULL, \`selfheals\` int(10) default NULL, \`repairs\` int(10) default NULL, \`otherrepairs\` int(10) default NULL, \`round_id\` int(10) default NULL, \`first\` int(10) default NULL, \`second\` int(10) default NULL, \`third\` int(10) default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`player_id\`,\`round_id\`), KEY \`player_id\` (\`player_id\`), KEY \`round_id\` (\`round_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_playtimes\` (\`id\` int(10) NOT NULL auto_increment, \`player_id\` int(10) default NULL, \`last_seen\` datetime default NULL, \`playtime\` float default '0', \`slots_used\` int(10) default '0', PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`player_id\`), KEY \`player_id\` (\`player_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_repairs\` (\`id\` int(10) NOT NULL auto_increment, \`player_id\` int(10) default NULL, \`vehicle\` varchar(150) default NULL, \`amount\` int(10) default NULL, \`repairtime\` float default NULL, \`times_repaired\` int(10) default '0', PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`player_id\`,\`vehicle\`), KEY \`player_id\` (\`player_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_rounds\` (\`id\` int(10) NOT NULL auto_increment, \`start_tickets_team1\` int(10) default NULL, \`start_tickets_team2\` int(10) default NULL, \`starttime\` datetime default NULL, \`end_tickets_team1\` int(10) default NULL, \`end_tickets_team2\` int(10) default NULL, \`endtime\` datetime default NULL, \`endtype\` tinytext, \`winning_team\` int(10) default '0', \`game_id\` int(10) default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`game_id\`), KEY \`game_id\` (\`game_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_selfkills\` (\`id\` int(10) NOT NULL auto_increment, \`player_id\` int(10) default NULL, \`times_killed\` int(10) default NULL, PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`player_id\`), KEY \`player_id\` (\`player_id\`)) ENGINE=MyISAM;
+CREATE TABLE IF NOT EXISTS \`selectbf_tks\` (\`id\` int(10) NOT NULL auto_increment, \`player_id\` int(10) default NULL, \`victim_id\` int(10) default NULL, \`times_killed\` int(10) NOT NULL default '0', PRIMARY KEY (\`id\`), UNIQUE KEY \`id\` (\`id\`), KEY \`id_2\` (\`id\`,\`player_id\`,\`victim_id\`), KEY \`player_id\` (\`player_id\`), KEY \`victim_id\` (\`victim_id\`)) ENGINE=MyISAM;
+
+-- Admin password and default params (only insert if table is empty)
+INSERT IGNORE INTO selectbf_admin (name, value, inserttime) VALUES ('ADMIN_PSW', '${SELECTBF_ADMIN_MD5}', NOW());
+INSERT IGNORE INTO selectbf_admin (name, value, inserttime) VALUES ('VERSION', '0.3', NOW());
+
+INSERT IGNORE INTO selectbf_params (id, name, value, inserttime) VALUES
+(1,'TEMPLATE','original',NOW()),
+(2,'DEBUG-LEVEL','0',NOW()),
+(3,'TITLE-PREFIX','BFV Stats',NOW()),
+(4,'MIN-ROUNDS','0',NOW()),
+(5,'STAR-NUMBER','20',NOW()),
+(6,'RANK-ORDERBY','points',NOW()),
+(7,'RANK-FORMULA','(0/0)*0',NOW()),
+(8,'CLAN-TABLE-SETUP','1',NOW()),
+(9,'CLAN-ACCESS-RIGHT','1',NOW()),
+(10,'CLAN-PARSER-PATH','${BFV_LOG_DIR}',NOW()),
+(11,'MIN-CLAN-MEMBERS','1',NOW()),
+(12,'MIN-CLAN-ROUNDS','1',NOW()),
+(13,'LIST-RANKING-PLAYER','50',NOW()),
+(14,'LIST-RANKING-GAMES','15',NOW()),
+(15,'LIST-CLAN-RANKING','25',NOW()),
+(16,'LIST-CHARACTER-TYPE','15',NOW()),
+(17,'LIST-CHARACTER-REPAIRS','15',NOW()),
+(18,'LIST-CHARACTER-HEALS','15',NOW()),
+(19,'LIST-MAP-ROUNDS','1',NOW()),
+(20,'LIST-MAP-KILLERS','15',NOW()),
+(21,'LIST-MAP-ATTACKS','15',NOW()),
+(22,'LIST-MAP-DEATHS','15',NOW()),
+(23,'LIST-MAP-TKS','15',NOW()),
+(24,'LIST-WEAPONS-LIST','25',NOW()),
+(25,'LIST-VEHICLES-LIST','25',NOW()),
+(26,'LIST-PLAYER-NICKNAMES','10',NOW()),
+(27,'LIST-PLAYER-CHARACTERS','10',NOW()),
+(28,'LIST-PLAYER-WEAPONS','10',NOW()),
+(29,'LIST-PLAYER-VICTIMS','10',NOW()),
+(30,'LIST-PLAYER-ASSASINS','10',NOW()),
+(31,'LIST-PLAYER-VEHICLES','10',NOW()),
+(32,'LIST-PLAYER-MAPS','10',NOW()),
+(33,'LIST-PLAYER-GAMES','10',NOW()),
+(34,'LIST-CLAN-MEMBERS','50',NOW()),
+(35,'RANK-ROUND','other',NOW()),
+(36,'RANK-ROUND-NUMBER','2',NOW());
+SQL
 
     chown -R www-data:www-data "$SELECTBF_DIR"
-    success "selectbf installed to $SELECTBF_DIR"
+    success "selectbf installed and configured in $SELECTBF_DIR"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -375,10 +455,18 @@ case "$UI_CHOICE" in
        echo -e "  Classic UI:  ${BOLD}http://${HOST_IP}:8081/${NC}" ;;
 esac
 echo ""
-if [[ "$UI_CHOICE" != "2" ]]; then
-    echo -e "  ${BOLD}Admin panel:${NC} click ${BOLD}Admin${NC} in the nav bar and enter your password."
-    echo -e "  ${BOLD}Run parser:${NC}  Admin → Run Parser to import existing log files."
-fi
+case "$UI_CHOICE" in
+    1|3)
+        echo -e "  ${BOLD}Modern admin panel:${NC}  click ${BOLD}Admin${NC} in the nav bar and enter your password."
+        echo -e "  ${BOLD}Run parser:${NC}          Admin → Run Parser to import existing log files."
+        ;;
+esac
+case "$UI_CHOICE" in
+    2|3)
+        echo -e "  ${BOLD}Classic admin panel:${NC} http://${HOST_IP}:8081/admin/ — use your admin password."
+        echo -e "  ${BOLD}Run parser:${NC}          Admin → Clantag/Parser section to import logs."
+        ;;
+esac
 echo ""
 echo -e "  ${YELLOW}Tip:${NC} Save your DB password — it was written to /opt/bfvstats/.env"
 if [[ "${DB_PASS}" == "${DB_PASS_DEFAULT:-}" ]]; then
