@@ -1,7 +1,7 @@
 # BFV Tracker — Proxmox LXC Installer
 
 A stats tracker for **Battlefield Vietnam** dedicated servers.  
-Runs on a Debian LXC. Built on top of [selectbf](https://github.com/select-bf/selectbf](https://github.com/toadle/selectbf)) with an optional modern dark web UI.
+Runs on a Debian LXC. Built on top of [selectbf](https://github.com/toadle/selectbf) with an optional modern dark web UI.
 
 ![BFV Tracker screenshot](https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main/docs/screenshot.png)
 
