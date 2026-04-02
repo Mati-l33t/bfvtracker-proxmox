@@ -1,6 +1,6 @@
 # Copyright (c) 2025-2026 -{GmV}- m@gic — https://github.com/Mati-l33t
 """BFV Stats — FastAPI backend for selectbf MySQL database."""
-import os, hashlib, time, socket
+import os, hashlib, time, socket, subprocess, shlex
 from urllib.request import urlopen
 from functools import lru_cache
 from typing import Optional
@@ -60,6 +60,65 @@ BFV_HOST = cfg.get("BFV_HOST", "10.0.0.70")
 BFV_QUERY_PORT = int(cfg.get("BFV_QUERY_PORT", 23000))
 BFV_GAME_PORT = int(cfg.get("BFV_GAME_PORT", 15567))
 
+# ─── BAN FILE (SSH) ───────────────────────────────────────────────────────────
+BAN_FILE_HOST = cfg.get("BAN_FILE_HOST", BFV_HOST)
+BAN_FILE_PATH = cfg.get("BAN_FILE_PATH", "")
+BAN_SSH_KEY   = cfg.get("BAN_SSH_KEY", "/root/.ssh/id_ed25519")
+
+def _ssh(cmd: str) -> str:
+    """Run a command on BAN_FILE_HOST via SSH, return stdout."""
+    key_dir = os.path.dirname(BAN_SSH_KEY)
+    known_hosts = os.path.join(key_dir, "known_hosts")
+    result = subprocess.run(
+        ["ssh", "-i", BAN_SSH_KEY,
+         "-o", f"UserKnownHostsFile={known_hosts}",
+         "-o", "StrictHostKeyChecking=accept-new",
+         "-o", "ConnectTimeout=5", f"root@{BAN_FILE_HOST}", cmd],
+        capture_output=True, text=True, timeout=10
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip())
+    return result.stdout
+
+def _parse_banfile(content: str) -> list:
+    """Parse serverbanlist.con lines into dicts."""
+    bans = []
+    for i, line in enumerate(content.splitlines()):
+        line = line.strip()
+        if not line:
+            continue
+        # Format: "name",ip,keyhash,*,"banned_by",timestamp,0,reason
+        parts = line.split(",", 7)
+        if len(parts) < 7:
+            continue
+        bans.append({
+            "id":        i,
+            "player_name": parts[0].strip('"'),
+            "ip":        parts[1],
+            "keyhash":   parts[2],
+            "banned_by": parts[4].strip('"') if len(parts) > 4 else "",
+            "banned_at": parts[5] if len(parts) > 5 else "",
+            "reason":    parts[7] if len(parts) > 7 else "",
+            "source":    "server",
+        })
+    return bans
+
+def _read_banfile_lines() -> list[str]:
+    """Return raw non-empty lines from the remote ban file."""
+    if not BAN_FILE_PATH:
+        return []
+    try:
+        content = _ssh(f"cat {shlex.quote(BAN_FILE_PATH)}")
+        return [l for l in content.splitlines() if l.strip()]
+    except Exception:
+        return []
+
+def _write_banfile_lines(lines: list[str]) -> None:
+    """Overwrite the remote ban file with the given lines."""
+    content = "\n".join(lines) + ("\n" if lines else "")
+    escaped = content.replace("'", "'\\''")
+    _ssh(f"printf '%s' '{escaped}' > {shlex.quote(BAN_FILE_PATH)}")
+
 _wan_ip_cache: dict = {"ip": None, "ts": 0}
 
 def _get_wan_ip() -> str:
@@ -110,22 +169,139 @@ def live():
         map_raw = d.get("mapname", "")
         map_slug = map_raw.lower().replace(" ", "_")
         wan = _get_wan_ip()
+        # Extract player rows: player_0, score_0, kills_0, deaths_0, ping_0, team_0
+        num = int(d.get("numplayers", 0))
+        players = []
+        for i in range(num):
+            name = d.get(f"player_{i}", "")
+            if not name:
+                continue
+            players.append({
+                "name":   name,
+                "score":  int(d.get(f"score_{i}",  0) or 0),
+                "kills":  int(d.get(f"kills_{i}",  0) or 0),
+                "deaths": int(d.get(f"deaths_{i}", 0) or 0),
+                "ping":   int(d.get(f"ping_{i}",   0) or 0),
+                "team":   int(d.get(f"team_{i}",   0) or 0),
+            })
+        # Team names
+        team1_name = d.get("team_t0", "Team 1")
+        team2_name = d.get("team_t1", "Team 2")
+        def _tickets(key):
+            v = d.get(key, "")
+            return int(v) if str(v).isdigit() else None
         return {
             "online": True,
             "server": d.get("hostname", ""),
             "map": map_slug,
             "map_display": map_raw.title(),
-            "player_count": int(d.get("numplayers", 0)),
+            "player_count": num,
             "maxplayers": int(d.get("maxplayers", 64)),
-            "tickets_team1": int(d.get("tickets_t0", 0)) if d.get("tickets_t0","").isdigit() else None,
-            "tickets_team2": int(d.get("tickets_t1", 0)) if d.get("tickets_t1","").isdigit() else None,
+            "tickets_team1": _tickets("tickets_t0"),
+            "tickets_team2": _tickets("tickets_t1"),
+            "team1_name": team1_name,
+            "team2_name": team2_name,
             "gamemode": d.get("gametype", ""),
             "public_host": wan,
             "public_port": BFV_GAME_PORT,
-            "players": [],
+            "players": players,
         }
     except Exception:
         raise HTTPException(status_code=503, detail="Server offline")
+
+@app.get("/api/live/chat")
+def live_chat(limit: int = 30):
+    """Return the last N chat messages from the active BFV log file."""
+    log_dir = cfg.get("BFV_LOG_DIR_REMOTE", cfg.get("BFV_LOG_DIR", ""))
+    if not log_dir or not BAN_FILE_HOST:
+        return []
+    try:
+        # Find the newest log file on the game server
+        result = _ssh(f"ls -t {shlex.quote(log_dir)}/ev_*.xml 2>/dev/null | head -1")
+        log_file = result.strip()
+        if not log_file:
+            return []
+        # Read it
+        content = _ssh(f"cat {shlex.quote(log_file)}")
+    except Exception:
+        return []
+
+    # Build player_id → name map from createPlayer events
+    import re
+    players: dict = {}
+    for m in re.finditer(
+        r'<bf:event name="createPlayer"[^>]*>.*?<bf:param[^>]*name="player_id"[^>]*>(\d+)</bf:param>.*?<bf:param[^>]*name="name"[^>]*>([^<]+)</bf:param>',
+        content, re.DOTALL
+    ):
+        players[int(m.group(1))] = m.group(2).strip()
+
+    # Extract chat events
+    messages = []
+    for m in re.finditer(
+        r'<bf:event name="chat" timestamp="([^"]+)">(.*?)</bf:event>',
+        content, re.DOTALL
+    ):
+        ts_raw = m.group(1)
+        block  = m.group(2)
+        pid_m  = re.search(r'name="player_id"[^>]*>(\d+)<', block)
+        txt_m  = re.search(r'name="text"[^>]*>([^<]*)<', block)
+        team_m = re.search(r'name="team"[^>]*>(\d+)<', block)
+        if not txt_m:
+            continue
+        pid  = int(pid_m.group(1)) if pid_m else -1
+        name = players.get(pid, f"Player {pid}")
+        text = txt_m.group(1).strip()
+        team = int(team_m.group(1)) if team_m else 0
+        if not text:
+            continue
+        messages.append({"ts": float(ts_raw), "name": name, "text": text, "team": team})
+
+    return messages[-limit:]
+
+@app.get("/api/live/rounds")
+def live_rounds():
+    rows = q("""
+        SELECT g.map, r.winning_team,
+               r.end_tickets_team1, r.end_tickets_team2,
+               r.starttime, r.endtime,
+               TIMESTAMPDIFF(SECOND, r.starttime, r.endtime) AS duration_sec,
+               COUNT(ps.id) AS players
+        FROM selectbf_rounds r
+        JOIN selectbf_games g ON g.id = r.game_id
+        LEFT JOIN selectbf_playerstats ps ON ps.round_id = r.id
+        WHERE r.endtime IS NOT NULL
+        GROUP BY r.id
+        ORDER BY r.endtime DESC
+        LIMIT 10
+    """)
+    out = []
+    for r in rows:
+        t1 = r["end_tickets_team1"] or 0
+        t2 = r["end_tickets_team2"] or 0
+        # winning_team stored as 0 in this DB — derive from tickets
+        if r["winning_team"] and r["winning_team"] != 0:
+            winner = int(r["winning_team"])
+        elif t1 != t2:
+            winner = 1 if t1 > t2 else 2
+        else:
+            winner = 0  # draw / unknown
+        sec = int(r["duration_sec"] or 0)
+        if sec >= 3600:
+            dur = f"{sec//3600}h {(sec%3600)//60}m"
+        elif sec >= 60:
+            dur = f"{sec//60}m"
+        else:
+            dur = f"{sec}s"
+        out.append({
+            "map":      r["map"],
+            "winner":   winner,
+            "tickets1": t1,
+            "tickets2": t2,
+            "duration": dur,
+            "players":  int(r["players"] or 0),
+            "endtime":  r["endtime"].strftime("%Y-%m-%d %H:%M") if r["endtime"] else "",
+        })
+    return out
 
 @app.get("/api/health")
 def health():
@@ -268,9 +444,14 @@ def player_detail(player_id: int):
                r.tks, r.rounds_played AS rounds,
                r.first AS gold_awards, r.second AS silver_awards, r.third AS bronze_awards,
                r.repairs, r.heals AS heal_points, r.captures, r.attacks, r.defences,
-               r.objectives, r.playtime, r.last_visit AS last_seen
+               r.objectives, r.playtime,
+               COALESCE(pt.last_seen, r.last_visit) AS last_seen
         FROM selectbf_players p
         JOIN selectbf_cache_ranking r ON r.player_id = p.id
+        LEFT JOIN (
+            SELECT player_id, MAX(last_seen) AS last_seen
+            FROM selectbf_playtimes GROUP BY player_id
+        ) pt ON pt.player_id = p.id
         WHERE p.id = %s
     """, [player_id])
     if not p:
@@ -620,17 +801,62 @@ def parser_log(_: None = Depends(verify_admin)):
 
 @app.get("/api/admin/bans")
 def get_bans(_: None = Depends(verify_admin)):
-    return q("SELECT * FROM sbf_ban ORDER BY created_at DESC")
+    # Merge bans from the server ban file (authoritative) with any DB-only bans
+    server_bans = []
+    file_available = False
+    if BAN_FILE_PATH:
+        try:
+            lines = _read_banfile_lines()
+            server_bans = _parse_banfile("\n".join(lines))
+            file_available = True
+        except Exception as e:
+            pass  # fall through to DB only
+
+    db_bans = q("SELECT * FROM sbf_ban ORDER BY created_at DESC")
+
+    if file_available:
+        # Server bans are authoritative — also include any DB bans not in the file
+        server_names = {b["player_name"].lower() for b in server_bans}
+        extra = [
+            {**b, "source": "db", "id": f"db-{b['id']}"}
+            for b in db_bans
+            if b["player_name"].lower() not in server_names
+        ]
+        return {"file_available": True, "bans": server_bans + extra}
+
+    # No file access — return DB bans only
+    return {"file_available": False, "bans": [
+        {**b, "source": "db", "id": f"db-{b['id']}"} for b in db_bans
+    ]}
 
 @app.post("/api/admin/ban")
 async def ban_player(request: Request, _: None = Depends(verify_admin)):
-    body = await request.json()
+    body  = await request.json()
+    name   = body.get("name", "").strip()
+    reason = body.get("reason", "").strip()
+    ip     = body.get("ip", "*").strip() or "*"
+    keyhash = body.get("keyhash", "*").strip() or "*"
+    if not name:
+        raise HTTPException(400, "Player name required")
+
+    # Write to server ban file if available
+    if BAN_FILE_PATH:
+        try:
+            lines = _read_banfile_lines()
+            ts = int(time.time()) + 86400 * 365 * 10  # ~10 years from now
+            new_line = f'"{name}",{ip},{keyhash},*,"admin",{ts},0,{reason}'
+            lines.append(new_line)
+            _write_banfile_lines(lines)
+        except Exception as e:
+            raise HTTPException(500, f"Could not write ban file: {e}")
+
+    # Also store in DB
     conn = db()
     try:
         with conn.cursor() as c:
             c.execute(
                 "INSERT INTO sbf_ban (player_name, reason, created_at) VALUES (%s,%s,NOW())",
-                [body.get("name",""), body.get("reason","")]
+                [name, reason]
             )
         conn.commit()
     finally:
@@ -638,11 +864,34 @@ async def ban_player(request: Request, _: None = Depends(verify_admin)):
     return {"ok": True}
 
 @app.delete("/api/admin/ban/{ban_id}")
-def unban(ban_id: int, _: None = Depends(verify_admin)):
+def unban(ban_id: str, _: None = Depends(verify_admin)):
+    # ban_id is either a numeric file line index (from server) or "db-N"
+    if BAN_FILE_PATH and not str(ban_id).startswith("db-"):
+        try:
+            idx = int(ban_id)
+            lines = _read_banfile_lines()
+            if 0 <= idx < len(lines):
+                removed_name = lines[idx].split(",")[0].strip('"')
+                lines.pop(idx)
+                _write_banfile_lines(lines)
+                # Also remove from DB if present
+                conn = db()
+                try:
+                    with conn.cursor() as c:
+                        c.execute("DELETE FROM sbf_ban WHERE player_name=%s", [removed_name])
+                    conn.commit()
+                finally:
+                    conn.close()
+                return {"ok": True}
+        except Exception as e:
+            raise HTTPException(500, f"Could not update ban file: {e}")
+
+    # DB-only ban
+    db_id = str(ban_id).replace("db-", "")
     conn = db()
     try:
         with conn.cursor() as c:
-            c.execute("DELETE FROM sbf_ban WHERE id=%s", [ban_id])
+            c.execute("DELETE FROM sbf_ban WHERE id=%s", [db_id])
         conn.commit()
     finally:
         conn.close()

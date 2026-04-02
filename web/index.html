@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BFV Stats — __SITE_TITLE__</title>
+<title>BFV Stats — GmV Server</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -276,9 +276,11 @@ tbody td.hi{color:var(--hi)}
 .log-err{color:var(--red)}
 .log-info{color:var(--acc)}
 .log-dim{color:var(--lo)}
-.ban-row{display:grid;grid-template-columns:1fr 1fr auto auto;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--border2);font-size:11px}
+.ban-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border2);font-size:11px}
 .ban-row:last-child{border-bottom:none}
 .ban-hdr-row{background:var(--bg3);border-bottom:1px solid var(--border)}
+.ban-src-server{color:var(--red);font-size:9px;font-family:'JetBrains Mono',monospace}
+.ban-src-db{color:var(--mid);font-size:9px;font-family:'JetBrains Mono',monospace}
 
 /* MEDAL SVG */
 .medal-svg{flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));transition:transform .2s}
@@ -322,11 +324,19 @@ tbody td.hi{color:var(--hi)}
 .live-player-tbl tbody td:first-child{text-align:left;color:var(--hi);font-size:11px;font-weight:500}
 .live-player-tbl .total-row{background:rgba(0,0,0,.2);border-top:1px solid rgba(255,255,255,.08)}
 .live-player-tbl .total-row td{color:var(--mid);font-size:10px}
-.live-sort-tabs{display:flex;gap:1px;border-bottom:1px solid var(--border);margin-bottom:14px}
-.live-sort-tab{padding:6px 14px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);cursor:pointer;border-bottom:2px solid transparent;position:relative;top:1px;transition:.12s}
-.live-sort-tab:hover{color:var(--mid)}
-.live-sort-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
 .round-hist-hdr{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--mid);padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border)}
+.lc-box{background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:16px;overflow:hidden}
+.lc-hdr{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--mid);padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.lc-log{height:380px;overflow-y:scroll;padding:8px 0;scrollbar-width:thin;scrollbar-color:var(--lo) var(--bg2)}
+.lc-log::-webkit-scrollbar{width:6px}
+.lc-log::-webkit-scrollbar-track{background:var(--bg2)}
+.lc-log::-webkit-scrollbar-thumb{background:var(--lo);border-radius:3px}
+.lc-log::-webkit-scrollbar-thumb:hover{background:var(--mid)}
+.lc-msg{padding:4px 14px;font-size:11px;font-family:'JetBrains Mono',monospace;border-bottom:1px solid var(--border2);display:flex;gap:8px;align-items:baseline}
+.lc-msg:last-child{border-bottom:none}
+.lc-name{color:var(--acc);font-weight:600;flex-shrink:0;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-text{color:var(--hi)}
+.chat-empty{padding:14px;color:var(--lo);text-align:center;font-size:11px;font-family:'JetBrains Mono',monospace}
 .rh-row{display:grid;grid-template-columns:1fr 110px 80px 70px 100px;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border2);font-size:11px;cursor:pointer;transition:.1s}
 .rh-row:last-child{border-bottom:none}
 .rh-row:hover{background:var(--bg4)}
@@ -465,8 +475,6 @@ tbody td.hi{color:var(--hi)}
   .team-tickets{font-size:22px}
   .live-player-tbl thead th{font-size:8px;padding:5px 6px}
   .live-player-tbl tbody td{font-size:9px;padding:5px 6px}
-  .live-sort-tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
-  .live-sort-tab{white-space:nowrap;font-size:9px;padding:5px 10px}
   .rh-row{grid-template-columns:1fr auto;gap:6px}
   .rh-dur,.rh-players,.rh-when{display:none}
 
@@ -475,9 +483,11 @@ tbody td.hi{color:var(--hi)}
   .aform-row .abtn{width:fit-content}
   .ban-row{grid-template-columns:1fr auto;gap:8px}
   .ban-row > div:nth-child(2),
-  .ban-row > div:nth-child(3){display:none}
+  .ban-row > div:nth-child(3),
+  .ban-row > div:nth-child(4){display:none}
   .ban-hdr-row > div:nth-child(2),
-  .ban-hdr-row > div:nth-child(3){display:none}
+  .ban-hdr-row > div:nth-child(3),
+  .ban-hdr-row > div:nth-child(4){display:none}
   .admin-body{padding:10px}
 
   /* FOOTER */
@@ -521,8 +531,8 @@ footer span{color:var(--acc2)}
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="logo" onclick="nav('players')" style="cursor:pointer">
-    <img src="/__LOGO_FILE__" alt="__SITE_TITLE__" style="width:32px;height:32px;object-fit:contain">
-    <div class="logo-text">__SITE_TITLE__ <span>STATS</span></div>
+    <img src="/gmv-logo.png" alt="GmV" style="width:32px;height:32px;object-fit:contain">
+    <div class="logo-text">GmV <span>STATS</span></div>
   </div>
   <nav>
     <a onclick="nav('players')" id="nav-players" class="active">Players</a>
@@ -533,12 +543,12 @@ footer span{color:var(--acc2)}
     <a onclick="nav('games')" id="nav-games">Games</a>
     <a onclick="nav('search')" id="nav-search">Search</a>
     <a onclick="nav('chars')" id="nav-chars">Characters</a>
-    __FORUM_LINK__
+    <a href="https://forum.gmvclan.com/" target="_blank" rel="noopener">Forum</a>
     <a onclick="nav('admin')" id="nav-admin" style="color:var(--red)">Admin</a>
   </nav>
   <div class="server-pill">
     <div class="dot"></div>
-    <span class="pill-name">__SERVER_NAME__</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">__BFV_HOST__:__BFV_GAME_PORT__</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
+    <span class="pill-name">-{GmV}- AIR WARS</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">10.0.0.70:15567</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
   </div>
 </header>
 
@@ -1069,9 +1079,19 @@ footer span{color:var(--acc2)}
         <input class="ainput" type="text" id="ban-reason" placeholder="Reason for ban…" style="flex:1">
         <div></div>
       </div>
+      <div class="aform-row">
+        <div class="alabel">IP <span style="color:var(--lo)">(opt)</span></div>
+        <input class="ainput" type="text" id="ban-ip" placeholder="e.g. 1.2.3.4 or * for any" style="flex:1">
+        <div></div>
+      </div>
+      <div class="aform-row">
+        <div class="alabel">Key hash <span style="color:var(--lo)">(opt)</span></div>
+        <input class="ainput" type="text" id="ban-keyhash" placeholder="32-char keyhash or * for any" style="flex:1">
+        <div></div>
+      </div>
     </div>
 
-    <div class="admin-title">📋 Current Bans</div>
+    <div class="admin-title">📋 Active Bans <span id="ban-source-note" style="font-size:10px;color:var(--lo);font-weight:400"></span></div>
     <div id="ban-list" class="admin-body" style="padding:0">
       <div style="padding:12px;color:var(--lo);font-family:'JetBrains Mono',monospace;font-size:11px">Loading…</div>
     </div>
@@ -1142,7 +1162,7 @@ footer span{color:var(--acc2)}
     <div class="team-panel us">
       <div class="team-panel-hdr">
         <div>
-          <div class="team-name">US Forces</div>
+          <div class="team-name" id="us-team-label">US Forces</div>
           <div id="us-tickets" class="team-tickets">—</div>
           <div class="ticket-label">tickets remaining</div>
         </div>
@@ -1160,12 +1180,6 @@ footer span{color:var(--acc2)}
         <tbody id="us-players">
           <tr><td colspan="6" style="text-align:center;padding:14px;color:var(--lo)">No players</td></tr>
         </tbody>
-        <tfoot>
-          <tr class="total-row" id="us-totals">
-            <td style="text-align:left;color:var(--lo)">Total</td>
-            <td>0</td><td>0</td><td>0</td><td>∞</td><td>—</td>
-          </tr>
-        </tfoot>
       </table>
     </div>
 
@@ -1173,7 +1187,7 @@ footer span{color:var(--acc2)}
     <div class="team-panel nva">
       <div class="team-panel-hdr">
         <div>
-          <div class="team-name">North Vietnam</div>
+          <div class="team-name" id="nva-team-label">North Vietnam</div>
           <div id="nva-tickets" class="team-tickets">—</div>
           <div class="ticket-label">tickets remaining</div>
         </div>
@@ -1191,44 +1205,26 @@ footer span{color:var(--acc2)}
         <tbody id="nva-players">
           <tr><td colspan="6" style="text-align:center;padding:14px;color:var(--lo)">No players</td></tr>
         </tbody>
-        <tfoot>
-          <tr class="total-row" id="nva-totals">
-            <td style="text-align:left;color:var(--lo)">Total</td>
-            <td>0</td><td>0</td><td>0</td><td>∞</td><td>—</td>
-          </tr>
-        </tfoot>
       </table>
     </div>
   </div>
 
-  <!-- Sort tabs -->
-  <div class="live-sort-tabs">
-    <div class="live-sort-tab active" onclick="setLiveSort('score')">Score</div>
-    <div class="live-sort-tab" onclick="setLiveSort('kills')">Kills</div>
-    <div class="live-sort-tab" onclick="setLiveSort('kd')">K/D</div>
-    <div class="live-sort-tab" onclick="setLiveSort('rounds')">Rounds</div>
-    <div class="live-sort-tab" onclick="setLiveSort('ping')">Avg Ping</div>
+  <!-- Live Chat -->
+  <div class="lc-box">
+    <div class="lc-hdr">
+      <div class="live-dot" style="animation:blink 1.4s infinite"></div>
+      Live Chat
+    </div>
+    <div class="lc-log" id="live-chat-log">
+      <div class="chat-empty">No chat messages yet</div>
+    </div>
   </div>
 
-  <!-- Round History -->
-  <div class="tbl-wrap">
-    <div class="round-hist-hdr">Round History</div>
-    <div class="rh-row rh-row-hdr">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)">Map</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)">Winner</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);text-align:center">Duration</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);text-align:center">Players</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo);text-align:right">When</div>
-    </div>
-    <div id="round-history-body">
-      <!-- seeded with example data matching screenshot 2 style -->
-    </div>
-  </div>
 </div>
 
 <footer>
-  __SITE_TITLE__ Battlefield Vietnam Stats &nbsp;·&nbsp;
-  <a href="https://github.com/Mati-l33t/bfvtracker-proxmox" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:none;transition:.12s" onmouseover="this.style.color='var(--hi)'" onmouseout="this.style.color='var(--acc)'">bfvtracker-proxmox</a>
+  -{GmV}- Battlefield Vietnam Stats &nbsp;·&nbsp;
+  <a href="https://github.com/Mati-l33t" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:none;transition:.12s" onmouseover="this.style.color='var(--hi)'" onmouseout="this.style.color='var(--acc)'">-{GmV}- m@gic</a>
   © 2026 &nbsp;·&nbsp; Some rights reserved &nbsp;·&nbsp; v2.0
 </footer>
 
@@ -1297,6 +1293,7 @@ var rankPage=0,rankSort='score',rankOrder='desc',rankSearch='',rankPeriod='',ran
 var gamesPage=0;
 var liveTimer=null;
 var liveSort='score';
+var livePlayers=[];
 var adminToken=null;
 try{adminToken=sessionStorage.getItem('bfv_admin_token');}catch(e){}
 var rankDebTimer=null;
@@ -2000,36 +1997,51 @@ function adminLogout(){
 }
 function loadBans(){
   var el=document.getElementById('ban-list');
+  var note=document.getElementById('ban-source-note');
   if(!el)return;
   el.innerHTML='<div style="padding:12px;color:var(--lo);font-family:\'JetBrains Mono\',monospace;font-size:11px">Loading\u2026</div>';
-  fetch('/api/admin/bans',{headers:{'X-Admin-Token':adminToken||''}}).then(function(r){return r.json();}).then(function(d){
+  fetch('/api/admin/bans',{headers:{'X-Admin-Token':adminToken||''}}).then(function(r){return r.json();}).then(function(resp){
+    var d=Array.isArray(resp)?resp:(resp.bans||[]);
+    var fileOk=resp.file_available;
+    if(note){note.textContent=fileOk?'— synced from server ban file':'— DB only (server ban file not reachable)';}
     if(!d||!d.length){el.innerHTML='<div style="padding:12px;color:var(--lo);font-family:\'JetBrains Mono\',monospace;font-size:11px">No active bans</div>';return;}
+    var hdrStyle='font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)';
     el.innerHTML='<div class="ban-row ban-hdr-row">'+
-      '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)">Player</div>'+
-      '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)">Reason</div>'+
-      '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)">Date</div>'+
+      '<div style="'+hdrStyle+'">Player</div>'+
+      '<div style="'+hdrStyle+'">IP</div>'+
+      '<div style="'+hdrStyle+'">Reason</div>'+
+      '<div style="'+hdrStyle+'">Banned by</div>'+
       '<div></div></div>'+
       d.map(function(b){
+        var srcBadge=b.source==='server'?'<span class="ban-src-server">SERVER</span>':'<span class="ban-src-db">DB</span>';
+        var idStr=typeof b.id==='string'?b.id:String(b.id);
         return '<div class="ban-row">'+
-          '<div style="color:var(--hi);font-weight:600">'+esc(b.player_name)+'</div>'+
+          '<div style="color:var(--hi);font-weight:600">'+esc(b.player_name)+'&nbsp;'+srcBadge+'</div>'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--mid)">'+esc(b.ip||'\u2014')+'</div>'+
           '<div style="color:var(--mid)">'+esc(b.reason||'\u2014')+'</div>'+
-          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--lo)">'+esc(b.created_at)+'</div>'+
-          '<button class="abtn safe" style="padding:4px 10px;font-size:10px" onclick="adminUnban('+b.id+')">Unban</button></div>';
+          '<div style="color:var(--lo);font-size:10px">'+esc(b.banned_by||b.created_at||'\u2014')+'</div>'+
+          '<button class="abtn safe" style="padding:4px 10px;font-size:10px" onclick="adminUnban(\''+idStr+'\')">Unban</button></div>';
       }).join('');
   }).catch(function(){if(el)el.innerHTML='<div style="padding:12px;color:var(--red)">Failed to load bans</div>';});
 }
 function adminBan(){
   var name=(document.getElementById('ban-name')||{}).value||'';
   var reason=(document.getElementById('ban-reason')||{}).value||'';
+  var ip=(document.getElementById('ban-ip')||{}).value||'*';
+  var keyhash=(document.getElementById('ban-keyhash')||{}).value||'*';
   if(!name.trim())return;
-  fetch('/api/admin/ban',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':adminToken||''},body:JSON.stringify({name:name.trim(),reason:reason.trim()})}).then(function(r){
-    if(r.ok){var bn=document.getElementById('ban-name');var br=document.getElementById('ban-reason');if(bn)bn.value='';if(br)br.value='';loadBans();}
-    else alert('Failed to ban player');
+  fetch('/api/admin/ban',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':adminToken||''},body:JSON.stringify({name:name.trim(),reason:reason.trim(),ip:ip.trim()||'*',keyhash:keyhash.trim()||'*'})}).then(function(r){
+    if(r.ok){
+      ['ban-name','ban-reason','ban-ip','ban-keyhash'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+      loadBans();
+    } else r.json().then(function(e){alert('Failed: '+(e.detail||'unknown error'));});
   }).catch(function(){alert('Error');});
 }
 function adminUnban(id){
   if(!confirm('Unban this player?'))return;
-  fetch('/api/admin/ban/'+id,{method:'DELETE',headers:{'X-Admin-Token':adminToken||''}}).then(function(){loadBans();}).catch(function(){alert('Error');});
+  fetch('/api/admin/ban/'+id,{method:'DELETE',headers:{'X-Admin-Token':adminToken||''}}).then(function(r){
+    if(r.ok)loadBans(); else alert('Failed to unban');
+  }).catch(function(){alert('Error');});
 }
 function loadClanTags(){
   var el=document.getElementById('clan-tag-list');
@@ -2088,11 +2100,28 @@ function loadParserLog(){
 }
 
 // ── LIVE SCOREBOARD ──────────────────────────────────────────────────────────────
+function renderLivePlayers(){
+  var sortKey=liveSort==='kd'?'kd':liveSort;
+  var players=livePlayers.map(function(p){
+    return Object.assign({},p,{kd:p.deaths?(p.kills/p.deaths):p.kills});
+  });
+  var usPl=players.filter(function(p){return p.team===2;}).sort(function(a,b){return(b[sortKey]||0)-(a[sortKey]||0);});
+  var nvaPl=players.filter(function(p){return p.team===1;}).sort(function(a,b){return(b[sortKey]||0)-(a[sortKey]||0);});
+  function plRow(p){
+    var kd=p.deaths?(p.kills/p.deaths).toFixed(2):'\u221e';
+    return '<tr style="cursor:default"><td>'+esc(p.name)+'</td><td>'+(p.score||0)+'</td><td>'+(p.kills||0)+'</td><td>'+(p.deaths||0)+'</td><td>'+kd+'</td><td>'+(p.ping!=null?p.ping:'\u2014')+'</td></tr>';
+  }
+  var usEl=document.getElementById('us-players');
+  var nvaEl=document.getElementById('nva-players');
+  if(usEl)usEl.innerHTML=usPl.length?usPl.map(plRow).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--lo)">No players</td></tr>';
+  if(nvaEl)nvaEl.innerHTML=nvaPl.length?nvaPl.map(plRow).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--lo)">No players</td></tr>';
+}
 function setLiveSort(s){
   liveSort=s;
   document.querySelectorAll('.live-sort-tab').forEach(function(t){
-    t.classList.toggle('active',t.textContent.toLowerCase()===s);
+    t.classList.toggle('active',t.textContent.trim().toLowerCase()===s);
   });
+  renderLivePlayers();
 }
 function fetchLive(){
   fetch('/api/live').then(function(r){
@@ -2100,7 +2129,7 @@ function fetchLive(){
     return r.json();
   }).then(function(d){
     var dot=document.getElementById('live-dot');
-    if(dot){dot.className='live-dot';} // online = default blink
+    if(dot){dot.className='live-dot';}
     setEl('live-status-text',esc(d.server||'Online'));
     setEl('live-last-update','Updated '+new Date().toLocaleTimeString());
     setEl('live-map',esc(d.map_display||fmtMapName(d.map||'')||'\u2014'));
@@ -2108,7 +2137,6 @@ function fetchLive(){
     var lmFb=document.getElementById('live-map-img-fallback');
     var imgSrc=mapImg(d.map||'');
     if(lmImg&&lmFb){if(imgSrc){lmImg.src=imgSrc;lmImg.style.display='block';lmFb.style.display='none';}else{lmImg.style.display='none';lmFb.style.display='flex';}}
-    // update hero strip and header
     var cnt=d.player_count||0;
     setEl('hero-online',cnt+'');
     var eo=document.getElementById('hero-online');
@@ -2118,37 +2146,18 @@ function fetchLive(){
     var hs=document.getElementById('hero-status');
     if(hs){hs.style.color='var(--green)';hs.textContent='\u25cf Online';}
     setEl('live-players',(d.player_count||0)+'/'+(d.maxplayers||64));
-    setEl('live-players',(d.player_count||0)+'/'+(d.maxplayers||64));
     setEl('us-tickets',d.tickets_team2!=null?d.tickets_team2:'\u2014');
     setEl('nva-tickets',d.tickets_team1!=null?d.tickets_team1:'\u2014');
     var usBadge=document.getElementById('us-winning-badge');
     var nvaBadge=document.getElementById('nva-winning-badge');
     if(usBadge)usBadge.style.display=((d.tickets_team2||0)>(d.tickets_team1||0))?'':'none';
     if(nvaBadge)nvaBadge.style.display=((d.tickets_team1||0)>(d.tickets_team2||0))?'':'none';
-    if(d.players){
-      var usPl=(d.players||[]).filter(function(p){return p.team===2;}).sort(function(a,b){return(b[liveSort]||0)-(a[liveSort]||0);});
-      var nvaPl=(d.players||[]).filter(function(p){return p.team===1;}).sort(function(a,b){return(b[liveSort]||0)-(a[liveSort]||0);});
-      function plRow(p){
-        var kd=p.deaths?(p.kills/p.deaths).toFixed(2):'\u221e';
-        return '<tr onclick="showPlayer('+p.id+')"><td>'+esc(p.name)+'</td><td>'+(p.score||0)+'</td><td>'+(p.kills||0)+'</td><td>'+(p.deaths||0)+'</td><td>'+kd+'</td><td>'+(p.ping||'\u2014')+'</td></tr>';
-      }
-      var usEl=document.getElementById('us-players');
-      var nvaEl=document.getElementById('nva-players');
-      if(usEl)usEl.innerHTML=usPl.length?usPl.map(plRow).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--lo)">No players</td></tr>';
-      if(nvaEl)nvaEl.innerHTML=nvaPl.length?nvaPl.map(plRow).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--lo)">No players</td></tr>';
-      function sum(pl,f){return pl.reduce(function(a,b){return a+(b[f]||0);},0);}
-      var usT=document.getElementById('us-totals');
-      var nvaT=document.getElementById('nva-totals');
-      if(usT)usT.innerHTML='<td style="text-align:left;color:var(--lo)">Total</td><td>'+sum(usPl,'score')+'</td><td>'+sum(usPl,'kills')+'</td><td>'+sum(usPl,'deaths')+'</td><td>\u2014</td><td>\u2014</td>';
-      if(nvaT)nvaT.innerHTML='<td style="text-align:left;color:var(--lo)">Total</td><td>'+sum(nvaPl,'score')+'</td><td>'+sum(nvaPl,'kills')+'</td><td>'+sum(nvaPl,'deaths')+'</td><td>\u2014</td><td>\u2014</td>';
-    }
-    if(d.rounds){
-      var rh=document.getElementById('round-history-body');
-      if(rh)rh.innerHTML=(d.rounds||[]).slice(-10).reverse().map(function(r){
-        var w=r.winning_team===1?'<span class="winner-pill nva">\uD83C\uDDFB\uD83C\uDDF3 Red</span>':'<span class="winner-pill us">\uD83C\uDDFA\uD83C\uDDF8 Blue</span>';
-        return '<div class="rh-row"><div>'+esc(r.map||'\u2014')+'</div><div>'+w+'</div><div style="text-align:center">'+esc(r.duration||'\u2014')+'</div><div style="text-align:center">'+(r.players||'\u2014')+'</div><div style="text-align:right;font-size:9px;color:var(--lo)">'+esc(r.endtime||'')+'</div></div>';
-      }).join('');
-    }
+    var t1El=document.getElementById('nva-team-label');
+    var t2El=document.getElementById('us-team-label');
+    if(t1El&&d.team1_name)t1El.textContent=d.team1_name.charAt(0).toUpperCase()+d.team1_name.slice(1);
+    if(t2El&&d.team2_name)t2El.textContent=d.team2_name.charAt(0).toUpperCase()+d.team2_name.slice(1);
+    livePlayers=d.players||[];
+    renderLivePlayers();
   }).catch(function(){
     var dot=document.getElementById('live-dot');
     if(dot)dot.className='live-dot offline';
@@ -2158,7 +2167,56 @@ function fetchLive(){
     if(hs){hs.style.color='var(--lo)';hs.textContent='\u25cf Offline';}
   });
 }
-function startLive(){fetchLive();liveTimer=setInterval(fetchLive,5000);}
+var _lastChatTs=-1;
+function fetchChat(){
+  fetch('/api/live/chat?limit=50').then(function(r){return r.json();}).then(function(msgs){
+    var el=document.getElementById('live-chat-log');
+    if(!el)return;
+    if(!msgs||!msgs.length){
+      if(_lastChatTs<0)el.innerHTML='<div class="chat-empty">No chat messages yet</div>';
+      return;
+    }
+    // Only re-render if there are new messages
+    var latest=msgs[msgs.length-1].ts;
+    if(latest===_lastChatTs)return;
+    _lastChatTs=latest;
+    el.innerHTML=msgs.map(function(m){
+      return '<div class="lc-msg"><span class="lc-name">'+esc(m.name)+'</span><span class="chat-text">'+esc(m.text)+'</span></div>';
+    }).join('');
+    el.scrollTop=el.scrollHeight;
+  }).catch(function(){});
+}
+function fetchRoundHistory(){
+  var el=document.getElementById('round-history-body');
+  if(!el)return;
+  fetch('/api/live/rounds').then(function(r){return r.json();}).then(function(rows){
+    if(!rows||!rows.length){
+      el.innerHTML='<div class="rh-row" style="color:var(--lo);justify-content:center">No completed rounds yet</div>';
+      return;
+    }
+    el.innerHTML=rows.map(function(r){
+      var mapName=fmtMapName(r.map||'');
+      var winner;
+      if(r.winner===1) winner='<span class="winner-pill nva">Red ('+r.tickets1+'t)</span>';
+      else if(r.winner===2) winner='<span class="winner-pill us">Blue ('+r.tickets2+'t)</span>';
+      else winner='<span style="color:var(--lo)">Draw</span>';
+      return '<div class="rh-row">'+
+        '<div>'+esc(mapName)+'</div>'+
+        '<div>'+winner+'</div>'+
+        '<div style="text-align:center">'+esc(r.duration)+'</div>'+
+        '<div style="text-align:center">'+r.players+'</div>'+
+        '<div style="text-align:right;font-size:9px;color:var(--lo)">'+esc(r.endtime)+'</div>'+
+        '</div>';
+    }).join('');
+  }).catch(function(){
+    if(el)el.innerHTML='<div class="rh-row" style="color:var(--red)">Failed to load round history</div>';
+  });
+}
+function startLive(){
+  fetchLive();fetchRoundHistory();fetchChat();
+  liveTimer=setInterval(fetchLive,5000);
+  setInterval(fetchChat,5000);
+}
 
 // ── INIT ────────────────────────────────────────────────────────────────────────
 function init(){
