@@ -451,7 +451,7 @@ def player_detail(player_id: int):
                 JOIN selectbf_playerstats ps2 ON ps2.round_id = rr.id
                 WHERE ps2.player_id = p.id) AS last_seen
         FROM selectbf_players p
-        JOIN selectbf_cache_ranking r ON r.player_id = p.id
+        LEFT JOIN selectbf_cache_ranking r ON r.player_id = p.id
         WHERE p.id = %s
     """, [player_id])
     if not p:
