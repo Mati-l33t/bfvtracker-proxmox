@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BFV Stats — GmV Server</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -965,6 +966,20 @@ footer span{color:var(--acc2)}
     <table>
       <thead><tr><th class="tl">#</th><th class="tl">Character Type</th><th>Total Usage</th><th>%</th><th style="width:200px"></th></tr></thead>
       <tbody id="chars-tbody"></tbody>
+    </table>
+  </div>
+  <div class="stitle" style="margin-top:32px">Top Repairers</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="tl">#</th><th class="tl">Player</th><th>Repairs</th><th>Time Invested</th></tr></thead>
+      <tbody id="repairs-tbody"></tbody>
+    </table>
+  </div>
+  <div class="stitle" style="margin-top:32px">Top Healers</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="tl">#</th><th class="tl">Player</th><th>Heals</th><th>Time Invested</th></tr></thead>
+      <tbody id="heals-tbody"></tbody>
     </table>
   </div>
 </div>
@@ -1944,9 +1959,23 @@ function loadVehicles(){
 }
 
 // ── CHARS ────────────────────────────────────────────────────────────────────────
+function fmtDuration(sec){
+  if(!sec)return '—';
+  var s=parseFloat(sec);
+  var h=Math.floor(s/3600);
+  var m=Math.floor((s%3600)/60);
+  var r=(s%60).toFixed(2);
+  return (h?h+'h ':'')+( (h||m)?m+'min ':'')+r+'sec';
+}
+
 function loadChars(){
   var tbody=document.getElementById('chars-tbody');
+  var rtbody=document.getElementById('repairs-tbody');
+  var htbody=document.getElementById('heals-tbody');
   if(tbody)tbody.innerHTML=loadingRow(4);
+  if(rtbody)rtbody.innerHTML=loadingRow(4);
+  if(htbody)htbody.innerHTML=loadingRow(4);
+
   fetch('/api/chartypes').then(function(r){return r.json();}).then(function(d){
     var maxU=d[0]?d[0].usage_count:1;
     if(tbody)tbody.innerHTML=d.map(function(c,i){
@@ -1955,6 +1984,22 @@ function loadChars(){
         '<td>'+pbarHtml(c.usage_count/maxU*100)+'</td></tr>';
     }).join('');
   }).catch(function(){if(tbody)tbody.innerHTML=errRow(4);});
+
+  fetch('/api/repairs').then(function(r){return r.json();}).then(function(d){
+    if(rtbody)rtbody.innerHTML=d.length?d.map(function(p,i){
+      return '<tr><td class="tl">'+(i+1)+'</td>'+
+        '<td class="tl"><a class="hi" onclick="showPlayer('+p.player_id+')" style="cursor:pointer">'+esc(p.name)+'</a></td>'+
+        '<td>'+fmt(p.repairs)+'</td><td>'+fmtDuration(p.repairtime_sec)+'</td></tr>';
+    }).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--dim)">No data</td></tr>';
+  }).catch(function(){if(rtbody)rtbody.innerHTML=errRow(4);});
+
+  fetch('/api/heals').then(function(r){return r.json();}).then(function(d){
+    if(htbody)htbody.innerHTML=d.length?d.map(function(p,i){
+      return '<tr><td class="tl">'+(i+1)+'</td>'+
+        '<td class="tl"><a class="hi" onclick="showPlayer('+p.player_id+')" style="cursor:pointer">'+esc(p.name)+'</a></td>'+
+        '<td>'+fmt(p.heals)+'</td><td>'+fmtDuration(p.healtime_sec)+'</td></tr>';
+    }).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--dim)">No data</td></tr>';
+  }).catch(function(){if(htbody)htbody.innerHTML=errRow(4);});
 }
 
 // ── SEARCH ───────────────────────────────────────────────────────────────────────

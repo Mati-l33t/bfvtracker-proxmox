@@ -653,6 +653,33 @@ def chartypes_global():
         FROM selectbf_kits GROUP BY kit ORDER BY usage_count DESC LIMIT 30
     """)
 
+# ─── ROUTES: REPAIRS / HEALS ──────────────────────────────────────────────────
+@app.get("/api/repairs")
+def repairs_top():
+    return q("""
+        SELECT p.id AS player_id, p.name,
+               SUM(r.times_repaired) AS repairs,
+               SUM(r.repairtime) AS repairtime_sec
+        FROM selectbf_repairs r
+        JOIN selectbf_players p ON p.id = r.player_id
+        GROUP BY r.player_id, p.name
+        ORDER BY repairs DESC
+        LIMIT 20
+    """)
+
+@app.get("/api/heals")
+def heals_top():
+    return q("""
+        SELECT p.id AS player_id, p.name,
+               SUM(h.times_healed) AS heals,
+               SUM(h.healtime) AS healtime_sec
+        FROM selectbf_heals h
+        JOIN selectbf_players p ON p.id = h.player_id
+        GROUP BY h.player_id, p.name
+        ORDER BY heals DESC
+        LIMIT 20
+    """)
+
 # ─── ROUTES: MAPS ─────────────────────────────────────────────────────────────
 @app.get("/api/maps")
 def maps_list():
