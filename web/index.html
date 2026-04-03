@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BFV Stats — __SITE_TITLE__</title>
+<title>BFV Stats — GmV Server</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -541,8 +541,8 @@ footer span{color:var(--acc2)}
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="logo" onclick="nav('players')" style="cursor:pointer">
-    <img src="/__LOGO_FILE__" alt="logo" style="width:32px;height:32px;object-fit:contain">
-    <div class="logo-text">__SITE_TITLE__ <span>STATS</span></div>
+    <img src="/gmv-logo.png" alt="logo" style="width:32px;height:32px;object-fit:contain">
+    <div class="logo-text">GmV Server <span>STATS</span></div>
   </div>
   <nav>
     <a onclick="nav('players')" id="nav-players" class="active">Players</a>
@@ -553,7 +553,7 @@ footer span{color:var(--acc2)}
     <a onclick="nav('games')" id="nav-games">Games</a>
     <a onclick="nav('search')" id="nav-search">Search</a>
     <a onclick="nav('chars')" id="nav-chars">Characters</a>
-    __FORUM_LINK__
+    <a href="https://forum.gmvclan.com/" target="_blank" rel="noopener">Forum</a>
     <span class="btn-join" id="btn-join" onclick="toggleJoinPopup(event)">JOIN
       <div class="join-popup" id="join-popup">
         <div class="jp-title">&#9654; CONNECT TO SERVER</div>
@@ -566,7 +566,7 @@ footer span{color:var(--acc2)}
   </nav>
   <div class="server-pill">
     <div class="dot"></div>
-    <span class="pill-name">__SERVER_NAME__</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">__BFV_HOST__:__BFV_GAME_PORT__</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
+    <span class="pill-name">-{GmV}- AIR WARS</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">10.0.0.70:15567</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
   </div>
 </header>
 
@@ -974,13 +974,8 @@ footer span{color:var(--acc2)}
 ═══════════════════════════════════════ -->
 <div class="page" id="page-weapons">
   <div class="bc"><span class="cur">Weapons</span></div>
-  <div class="stitle">Global Weapon Statistics</div>
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr><th class="tl">#</th><th class="tl">Weapon</th><th>Total Kills</th><th>%</th><th style="width:250px"></th></tr></thead>
-      <tbody id="weapons-tbody"></tbody>
-    </table>
-  </div>
+  <div class="stitle">Weapon Statistics by Category</div>
+  <div id="weapons-categories"></div>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -1906,17 +1901,32 @@ function loadMapsList(){
 
 // ── WEAPONS ─────────────────────────────────────────────────────────────────────
 function loadWeapons(){
-  var tbody=document.getElementById('weapons-tbody');
-  if(tbody)tbody.innerHTML=loadingRow(5);
-  fetch('/api/weapons').then(function(r){return r.json();}).then(function(d){
-    var maxK=d[0]?d[0].kills:1;
-    if(tbody)tbody.innerHTML=d.map(function(w,i){
-      return '<tr><td class="tl">'+(i+1)+'</td><td class="tl hi">'+esc(w.name)+'</td>'+
-        '<td>'+fmt(w.kills)+'</td><td>'+fmtF(w.pct)+'</td>'+
-        '<td>'+pbarHtml(w.kills/maxK*100)+'</td></tr>';
+  var wrap=document.getElementById('weapons-categories');
+  if(wrap)wrap.innerHTML='<div class="loading" style="padding:32px;text-align:center">Loading…</div>';
+  fetch('/api/weapons/categories').then(function(r){return r.json();}).then(function(cats){
+    if(!wrap)return;
+    if(!cats||!cats.length){wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--dim)">No data</div>';return;}
+    wrap.innerHTML=cats.map(function(cat){
+      if(!cat.players||!cat.players.length)return '';
+      var maxF=cat.players[0].frags||1;
+      var rows=cat.players.map(function(p,i){
+        return '<tr>'+
+          '<td class="tl" style="width:40px">'+(i+1)+'</td>'+
+          '<td class="tl"><a class="hi" onclick="showPlayer('+p.player_id+')" style="cursor:pointer">'+esc(p.name)+'</a></td>'+
+          '<td>'+fmt(p.frags)+'</td>'+
+          '<td>'+pbarHtml(p.frags/maxF*100)+'</td>'+
+        '</tr>';
+      }).join('');
+      return '<div class="cat-block">'+
+        '<div class="stitle" style="margin-top:28px;margin-bottom:8px">'+esc(cat.name)+'</div>'+
+        '<div class="tbl-wrap"><table>'+
+          '<thead><tr><th class="tl">#</th><th class="tl">Player</th><th>Frags</th><th style="width:220px"></th></tr></thead>'+
+          '<tbody>'+rows+'</tbody>'+
+        '</table></div>'+
+      '</div>';
     }).join('');
     loadSidebarWeapons();
-  }).catch(function(){if(tbody)tbody.innerHTML=errRow(5);});
+  }).catch(function(){if(wrap)wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--dim)">Failed to load</div>';});
 }
 
 // ── VEHICLES ────────────────────────────────────────────────────────────────────

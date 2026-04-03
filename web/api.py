@@ -615,6 +615,24 @@ def weapons_global():
         FROM selectbf_kills_weapon GROUP BY weapon ORDER BY kills DESC LIMIT 50
     """)
 
+@app.get("/api/weapons/categories")
+def weapons_categories():
+    cats = q("SELECT id, name FROM selectbf_category WHERE type='WEAPON' AND collect_data=1 ORDER BY id")
+    result = []
+    for cat in cats:
+        top = q("""
+            SELECT p.id AS player_id, p.name, SUM(k.times_used) AS frags
+            FROM selectbf_kills_weapon k
+            JOIN selectbf_players p ON p.id = k.player_id
+            JOIN selectbf_categorymember m ON m.member = k.weapon
+            WHERE m.category = %s
+            GROUP BY p.id, p.name
+            ORDER BY frags DESC
+            LIMIT 25
+        """, [cat["id"]])
+        result.append({"id": cat["id"], "name": cat["name"], "players": top})
+    return result
+
 # ─── ROUTES: VEHICLES ─────────────────────────────────────────────────────────
 @app.get("/api/vehicles")
 def vehicles_global():
