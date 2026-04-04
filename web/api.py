@@ -98,6 +98,7 @@ def _parse_banfile(content: str) -> list:
             "keyhash":   parts[2],
             "banned_by": parts[4].strip('"') if len(parts) > 4 else "",
             "banned_at": parts[5] if len(parts) > 5 else "",
+            "expires":   parts[6] if len(parts) > 6 else "0",
             "reason":    parts[7] if len(parts) > 7 else "",
             "source":    "server",
         })
@@ -313,7 +314,7 @@ def health():
 
 @app.get("/api/stats/summary")
 def summary():
-    players = q1("SELECT COUNT(*) c FROM selectbf_players")
+    players = q1("SELECT COUNT(DISTINCT player_id) c FROM selectbf_cache_ranking")
     games   = q1("SELECT COUNT(*) c FROM selectbf_games")
     kills   = q1("SELECT SUM(kills) c FROM selectbf_cache_ranking")
     return {
@@ -509,11 +510,18 @@ def player_detail(player_id: int):
     last_games = q(
         """SELECT g.id AS game_id, g.starttime AS start_time, g.servername AS server_name,
            g.modid AS mod_name, g.map AS map_name, g.game_mode AS gamemode,
-           ps.score, ps.kills, ps.deaths
+           SUM(ps.score) AS score, SUM(ps.kills) AS kills, SUM(ps.deaths) AS deaths
            FROM selectbf_playerstats ps
            JOIN selectbf_rounds r ON ps.round_id = r.id
            JOIN selectbf_games g ON r.game_id = g.id
            WHERE ps.player_id=%s
+             AND NOT EXISTS (
+               SELECT 1 FROM selectbf_games g2
+               WHERE g2.map = g.map
+                 AND g2.id > g.id
+                 AND ABS(TIMESTAMPDIFF(SECOND, g2.starttime, g.starttime)) <= 60
+             )
+           GROUP BY g.id, g.starttime, g.servername, g.modid, g.map, g.game_mode
            ORDER BY g.starttime DESC LIMIT 20""",
         [player_id])
 
@@ -652,6 +660,22 @@ def chartypes_global():
         ROUND(SUM(times_used)*100.0/(SELECT SUM(times_used) FROM selectbf_kits),2) AS pct
         FROM selectbf_kits GROUP BY kit ORDER BY usage_count DESC LIMIT 30
     """)
+
+@app.get("/api/top-pilots")
+def top_pilots():
+    air_weapons = (
+        'AC-47','Corsair','Mi8','Mi8Cargo','Mig17','MiG21','OH-6','UH1Assault','UH1Transport'
+    )
+    placeholders = ",".join(["%s"] * len(air_weapons))
+    return q(f"""
+        SELECT p.id AS player_id, p.name, SUM(kw.times_used) AS air_kills
+        FROM selectbf_kills_weapon kw
+        JOIN selectbf_players p ON p.id = kw.player_id
+        WHERE kw.weapon IN ({placeholders})
+        GROUP BY kw.player_id, p.name
+        ORDER BY air_kills DESC
+        LIMIT 15
+    """, list(air_weapons))
 
 # ─── ROUTES: REPAIRS / HEALS ──────────────────────────────────────────────────
 @app.get("/api/repairs")

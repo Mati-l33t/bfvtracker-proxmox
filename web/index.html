@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BFV Stats — GmV Server</title>
+<title>BFV Stats</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -164,6 +165,12 @@ tbody td.hi{color:var(--hi)}
 .widget{background:var(--bg2);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:12px}
 .widget:last-child{margin-bottom:0}
 .wh{padding:8px 14px;background:var(--bg3);border-bottom:1px solid var(--border);font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)}
+.clk-row{display:flex;align-items:baseline;gap:6px;padding:5px 0}
+.clk-label{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;color:var(--mid);text-transform:uppercase;letter-spacing:1px;width:72px;flex-shrink:0}
+.clk-tz{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lo);width:36px;flex-shrink:0}
+.clk-day{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lo);width:28px;flex-shrink:0}
+.clk-time{font-family:'JetBrains Mono',monospace;font-size:18px;color:var(--acc);letter-spacing:1px;flex:1;text-align:right}
+.clk-sep{height:1px;background:var(--border2);margin:3px 0}
 .wr{padding:8px 14px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center;font-size:11px;cursor:pointer;transition:.1s}
 .wr:last-child{border-bottom:none}
 .wr:hover{background:var(--bg4)}
@@ -286,11 +293,18 @@ tbody td.hi{color:var(--hi)}
 .log-err{color:var(--red)}
 .log-info{color:var(--acc)}
 .log-dim{color:var(--lo)}
-.ban-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border2);font-size:11px}
+.ban-row{display:grid;grid-template-columns:1.4fr 1fr 1.6fr 1fr 1fr 1fr 1fr auto;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border2);font-size:11px}
 .ban-row:last-child{border-bottom:none}
 .ban-hdr-row{background:var(--bg3);border-bottom:1px solid var(--border)}
 .ban-src-server{color:var(--red);font-size:9px;font-family:'JetBrains Mono',monospace}
 .ban-src-db{color:var(--mid);font-size:9px;font-family:'JetBrains Mono',monospace}
+.kh-wrap{position:relative;display:inline-block}
+.kh-tip{display:none;position:absolute;top:calc(100% + 5px);left:0;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:7px 10px;white-space:nowrap;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.kh-tip.open{display:flex;align-items:center;gap:8px}
+.kh-full{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--hi)}
+.kh-copy{background:var(--bg4);border:1px solid var(--border);border-radius:3px;color:var(--mid);font-size:9px;font-family:'JetBrains Mono',monospace;padding:2px 7px;cursor:pointer;transition:.12s;white-space:nowrap}
+.kh-copy:hover{color:var(--hi);border-color:var(--acc2)}
+.kh-copy.copied{color:var(--green);border-color:var(--green)}
 
 /* MEDAL SVG */
 .medal-svg{flex-shrink:0;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));transition:transform .2s}
@@ -494,10 +508,16 @@ tbody td.hi{color:var(--hi)}
   .ban-row{grid-template-columns:1fr auto;gap:8px}
   .ban-row > div:nth-child(2),
   .ban-row > div:nth-child(3),
-  .ban-row > div:nth-child(4){display:none}
+  .ban-row > div:nth-child(4),
+  .ban-row > div:nth-child(5),
+  .ban-row > div:nth-child(6),
+  .ban-row > div:nth-child(7){display:none}
   .ban-hdr-row > div:nth-child(2),
   .ban-hdr-row > div:nth-child(3),
-  .ban-hdr-row > div:nth-child(4){display:none}
+  .ban-hdr-row > div:nth-child(4),
+  .ban-hdr-row > div:nth-child(5),
+  .ban-hdr-row > div:nth-child(6),
+  .ban-hdr-row > div:nth-child(7){display:none}
   .admin-body{padding:10px}
 
   /* FOOTER */
@@ -541,8 +561,8 @@ footer span{color:var(--acc2)}
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="logo" onclick="nav('players')" style="cursor:pointer">
-    <img src="/gmv-logo.png" alt="logo" style="width:32px;height:32px;object-fit:contain">
-    <div class="logo-text">GmV Server <span>STATS</span></div>
+    <div class="logo-hex">BFV</div>
+    <div class="logo-text">BFV <span>STATS</span></div>
   </div>
   <nav>
     <a onclick="nav('players')" id="nav-players" class="active">Players</a>
@@ -553,7 +573,7 @@ footer span{color:var(--acc2)}
     <a onclick="nav('games')" id="nav-games">Games</a>
     <a onclick="nav('search')" id="nav-search">Search</a>
     <a onclick="nav('chars')" id="nav-chars">Characters</a>
-    <a href="https://forum.gmvclan.com/" target="_blank" rel="noopener">Forum</a>
+
     <span class="btn-join" id="btn-join" onclick="toggleJoinPopup(event)">JOIN
       <div class="join-popup" id="join-popup">
         <div class="jp-title">&#9654; CONNECT TO SERVER</div>
@@ -566,7 +586,7 @@ footer span{color:var(--acc2)}
   </nav>
   <div class="server-pill">
     <div class="dot"></div>
-    <span class="pill-name">-{GmV}- AIR WARS</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">10.0.0.70:15567</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
+    <span class="pill-name">BFV Server</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">—</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
   </div>
 </header>
 
@@ -755,6 +775,10 @@ footer span{color:var(--acc2)}
       <div class="widget">
         <div class="wh">Map Win Rates (US/ARVN)</div>
         <div id="sidebar-maps"></div>
+      </div>
+      <div class="widget">
+        <div class="wh">World Clock</div>
+        <div id="world-clock" style="padding:10px 14px 12px"></div>
       </div>
     </div>
   </div>
@@ -965,6 +989,13 @@ footer span{color:var(--acc2)}
     <table>
       <thead><tr><th class="tl">#</th><th class="tl">Character Type</th><th>Total Usage</th><th>%</th><th style="width:200px"></th></tr></thead>
       <tbody id="chars-tbody"></tbody>
+    </table>
+  </div>
+  <div class="stitle" style="margin-top:32px">Top Pilots ✈ (Air Kills)</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th class="tl">#</th><th class="tl">Player</th><th>Air Kills</th><th style="width:250px"></th></tr></thead>
+      <tbody id="pilots-tbody"></tbody>
     </table>
   </div>
   <div class="stitle" style="margin-top:32px">Top Repairers</div>
@@ -1969,9 +2000,11 @@ function fmtDuration(sec){
 
 function loadChars(){
   var tbody=document.getElementById('chars-tbody');
+  var ptbody=document.getElementById('pilots-tbody');
   var rtbody=document.getElementById('repairs-tbody');
   var htbody=document.getElementById('heals-tbody');
   if(tbody)tbody.innerHTML=loadingRow(4);
+  if(ptbody)ptbody.innerHTML=loadingRow(4);
   if(rtbody)rtbody.innerHTML=loadingRow(4);
   if(htbody)htbody.innerHTML=loadingRow(4);
 
@@ -1983,6 +2016,16 @@ function loadChars(){
         '<td>'+pbarHtml(c.usage_count/maxU*100)+'</td></tr>';
     }).join('');
   }).catch(function(){if(tbody)tbody.innerHTML=errRow(4);});
+
+  fetch('/api/top-pilots').then(function(r){return r.json();}).then(function(d){
+    var maxK=d[0]?d[0].air_kills:1;
+    if(ptbody)ptbody.innerHTML=d.length?d.map(function(p,i){
+      return '<tr><td class="tl">'+(i+1)+'</td>'+
+        '<td class="tl"><a class="hi" onclick="showPlayer('+p.player_id+')" style="cursor:pointer">'+esc(p.name)+'</a></td>'+
+        '<td>'+fmt(p.air_kills)+'</td>'+
+        '<td>'+pbarHtml(p.air_kills/maxK*100)+'</td></tr>';
+    }).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--dim)">No data</td></tr>';
+  }).catch(function(){if(ptbody)ptbody.innerHTML=errRow(4);});
 
   fetch('/api/repairs').then(function(r){return r.json();}).then(function(d){
     if(rtbody)rtbody.innerHTML=d.length?d.map(function(p,i){
@@ -2097,20 +2140,43 @@ function loadBans(){
     if(note){note.textContent=fileOk?'— synced from server ban file':'— DB only (server ban file not reachable)';}
     if(!d||!d.length){el.innerHTML='<div style="padding:12px;color:var(--lo);font-family:\'JetBrains Mono\',monospace;font-size:11px">No active bans</div>';return;}
     var hdrStyle='font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo)';
+    function fmtTs(ts){
+      var n=parseInt(ts,10);
+      if(!n||n===0)return '\u2014';
+      return new Date(n*1000).toISOString().slice(0,10);
+    }
+    function fmtExpiry(ts){
+      var n=parseInt(ts,10);
+      if(!n||n===0)return '<span style="color:var(--red)">Permanent</span>';
+      var d=new Date(n*1000);
+      var now=new Date();
+      var expired=d<now;
+      var str=d.toISOString().slice(0,10);
+      return expired?'<span style="color:var(--lo)">'+str+' (exp)</span>':'<span style="color:var(--yellow)">'+str+'</span>';
+    }
     el.innerHTML='<div class="ban-row ban-hdr-row">'+
       '<div style="'+hdrStyle+'">Player</div>'+
       '<div style="'+hdrStyle+'">IP</div>'+
+      '<div style="'+hdrStyle+'">Keyhash</div>'+
       '<div style="'+hdrStyle+'">Reason</div>'+
       '<div style="'+hdrStyle+'">Banned by</div>'+
+      '<div style="'+hdrStyle+'">Banned at</div>'+
+      '<div style="'+hdrStyle+'">Expires</div>'+
       '<div></div></div>'+
       d.map(function(b){
         var srcBadge=b.source==='server'?'<span class="ban-src-server">SERVER</span>':'<span class="ban-src-db">DB</span>';
         var idStr=typeof b.id==='string'?b.id:String(b.id);
+        var kh=b.keyhash||'\u2014';
+        var khDisplay=kh!=='\u2014'&&kh!=='*'?'<span class="kh-wrap"><span class="kh-short" onclick="toggleKh(this)" style="cursor:pointer;color:var(--lo)">'+esc(kh.slice(0,8))+'\u2026</span><span class="kh-tip"><span class="kh-full">'+esc(kh)+'</span><button class="kh-copy" onclick="copyKh(this,\''+esc(kh)+'\')">Copy</button></span></span>':esc(kh);
+        var bannedAt=b.banned_at?fmtTs(b.banned_at):(b.created_at?esc(String(b.created_at).slice(0,10)):'\u2014');
         return '<div class="ban-row">'+
           '<div style="color:var(--hi);font-weight:600">'+esc(b.player_name)+'&nbsp;'+srcBadge+'</div>'+
           '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--mid)">'+esc(b.ip||'\u2014')+'</div>'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--lo)">'+khDisplay+'</div>'+
           '<div style="color:var(--mid)">'+esc(b.reason||'\u2014')+'</div>'+
-          '<div style="color:var(--lo);font-size:10px">'+esc(b.banned_by||b.created_at||'\u2014')+'</div>'+
+          '<div style="color:var(--lo);font-size:10px">'+esc(b.banned_by||'\u2014')+'</div>'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--lo)">'+bannedAt+'</div>'+
+          '<div style="font-size:10px">'+fmtExpiry(b.expires||'0')+'</div>'+
           '<button class="abtn safe" style="padding:4px 10px;font-size:10px" onclick="adminUnban(\''+idStr+'\')">Unban</button></div>';
       }).join('');
   }).catch(function(){if(el)el.innerHTML='<div style="padding:12px;color:var(--red)">Failed to load bans</div>';});
@@ -2127,6 +2193,22 @@ function adminBan(){
       loadBans();
     } else r.json().then(function(e){alert('Failed: '+(e.detail||'unknown error'));});
   }).catch(function(){alert('Error');});
+}
+function toggleKh(el){
+  var tip=el.nextElementSibling;
+  var isOpen=tip.classList.contains('open');
+  // close any other open tips
+  document.querySelectorAll('.kh-tip.open').forEach(function(t){t.classList.remove('open');});
+  if(!isOpen)tip.classList.add('open');
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.kh-wrap'))document.querySelectorAll('.kh-tip.open').forEach(function(t){t.classList.remove('open');});
+});
+function copyKh(btn,hash){
+  navigator.clipboard.writeText(hash).then(function(){
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(function(){btn.textContent='Copy';btn.classList.remove('copied');},1500);
+  }).catch(function(){btn.textContent='Error';});
 }
 function adminUnban(id){
   if(!confirm('Unban this player?'))return;
@@ -2309,6 +2391,41 @@ function startLive(){
   setInterval(fetchChat,5000);
 }
 
+// ── WORLD CLOCK ─────────────────────────────────────────────────────────────────
+function initWorldClock(){
+  var zones=[
+    {label:'Local',    tz:Intl.DateTimeFormat().resolvedOptions().timeZone},
+    {label:'New York', tz:'America/New_York'},
+    {label:'London',   tz:'Europe/London'},
+    {label:'Kyiv',     tz:'Europe/Kiev'}
+  ];
+  var el=document.getElementById('world-clock');
+  if(!el)return;
+  function fmtZone(z){
+    var now=new Date();
+    var parts=new Intl.DateTimeFormat('en-US',{
+      timeZone:z.tz,hour:'2-digit',minute:'2-digit',hour12:false,
+      weekday:'short'
+    }).formatToParts(now);
+    var p={};parts.forEach(function(x){p[x.type]=x.value;});
+    var timeStr=p.hour+':'+p.minute;
+    var dayStr=p.weekday;
+    var tzAbbr=new Intl.DateTimeFormat('en-US',{timeZone:z.tz,timeZoneName:'short'})
+      .formatToParts(now).find(function(x){return x.type==='timeZoneName';}).value;
+    return '<div class="clk-row">'+
+      '<span class="clk-label">'+z.label+'</span>'+
+      '<span class="clk-tz">'+tzAbbr+'</span>'+
+      '<span class="clk-day">'+dayStr+'</span>'+
+      '<span class="clk-time">'+timeStr+'</span>'+
+    '</div>';
+  }
+  function tick(){
+    el.innerHTML=zones.map(fmtZone).join('<div class="clk-sep"></div>');
+  }
+  tick();
+  setInterval(tick,1000);
+}
+
 // ── INIT ────────────────────────────────────────────────────────────────────────
 function init(){
   fetch('/api/maps').then(function(r){return r.json();}).then(function(maps){
@@ -2322,6 +2439,7 @@ function init(){
   loadSidebarGames();
   loadSidebarWeapons();
   loadSidebarMaps();
+  initWorldClock();
   initSearchForm();
 
   // Restore page from URL hash on load/refresh
