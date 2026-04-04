@@ -23,7 +23,7 @@ Runs on a Debian LXC. Built on top of [selectbf](https://github.com/toadle/selec
 
 ## Requirements
 
-- Debian 11/12 or Ubuntu 22.04+ LXC (512 MB RAM minimum, 2 GB disk)
+- Debian 11/12/13 or Ubuntu 22.04+ LXC (512 MB RAM minimum, 2 GB disk)
 - BFV dedicated server reachable on the network
 - BFV server log files accessible from this LXC (see [Getting the logs](#getting-the-logs))
 
