@@ -121,6 +121,7 @@ def _write_banfile_lines(lines: list[str]) -> None:
     _ssh(f"printf '%s' '{escaped}' > {shlex.quote(BAN_FILE_PATH)}")
 
 _wan_ip_cache: dict = {"ip": None, "ts": 0}
+_ping_cache: dict = {"avg": None}
 
 def _get_wan_ip() -> str:
     now = time.time()
@@ -191,7 +192,7 @@ def live():
         def _tickets(key):
             v = d.get(key, "")
             return int(v) if str(v).isdigit() else None
-        return {
+        result = {
             "online": True,
             "server": d.get("hostname", ""),
             "map": map_slug,
@@ -207,6 +208,10 @@ def live():
             "public_port": BFV_GAME_PORT,
             "players": players,
         }
+        active = [p for p in players if p["ping"] > 0]
+        if active:
+            _ping_cache["avg"] = round(sum(p["ping"] for p in active) / len(active), 1)
+        return result
     except Exception:
         raise HTTPException(status_code=503, detail="Server offline")
 
@@ -322,6 +327,21 @@ def summary():
         "games":   games["c"]   if games   else 0,
         "kills":   kills["c"]   if kills   else 0,
     }
+
+@app.get("/api/stats/server")
+def server_stats():
+    row = q1("""
+        SELECT
+          COUNT(DISTINCT DATE(starttime)) AS active_days,
+          GREATEST(DATEDIFF(NOW(), MIN(starttime)), 1) AS total_days
+        FROM selectbf_rounds
+        WHERE starttime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+          AND starttime IS NOT NULL
+    """)
+    active = int(row["active_days"] or 0) if row else 0
+    total  = int(row["total_days"]  or 30) if row else 30
+    uptime_pct = round(active / total * 100, 1)
+    return {"uptime_pct": uptime_pct, "uptime_days": active, "window_days": total, "avg_ping": _ping_cache["avg"]}
 
 # ─── ROUTES: AUTH ─────────────────────────────────────────────────────────────
 @app.post("/api/admin/login")

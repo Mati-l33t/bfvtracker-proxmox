@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BFV Stats</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -20,12 +19,26 @@ a{color:inherit;text-decoration:none}
 button{cursor:pointer;font-family:inherit}
 body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.03) 3px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:9999}
 
+/* SERVER STATS WIDGET */
+.ss-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0}
+.ss-label{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;color:var(--mid);text-transform:uppercase;letter-spacing:1px}
+.ss-val{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--acc);text-align:right}
+.ss-sep{height:1px;background:var(--border2);margin:3px 0}
+.ss-ping-good{color:var(--green)}
+.ss-ping-mid{color:var(--yellow)}
+.ss-ping-bad{color:var(--red)}
+.ss-uptime-bar{display:flex;align-items:center;gap:6px}
+.ss-uptime-pct{font-family:'JetBrains Mono',monospace;font-size:13px}
+.ss-uptime-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;min-width:40px}
+.ss-uptime-fill{height:100%;border-radius:2px}
+
 /* TOPBAR */
 .topbar{display:flex;align-items:center;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;padding:0 20px;gap:0}
 .logo{display:flex;align-items:center;gap:10px;margin-right:24px;flex-shrink:0}
 .logo-hex{width:32px;height:32px;background:var(--acc);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#000}
 .logo-text{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;letter-spacing:3px}
 .logo-text span{color:var(--acc)}
+.logo-gmv{color:#c8dff0;-webkit-text-fill-color:#c8dff0}
 nav{display:flex;gap:1px;flex:1;flex-wrap:wrap}
 nav a{padding:5px 12px;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);border:1px solid transparent;border-radius:3px;transition:.12s;white-space:nowrap;cursor:pointer}
 nav a:hover{color:var(--hi);background:var(--bg3);border-color:var(--border)}
@@ -114,6 +127,7 @@ tbody td.hi{color:var(--hi)}
 /* KD COLORS */
 .kp{color:var(--green)}
 .kn{color:var(--red)}
+.kg{color:var(--yellow);text-shadow:0 0 8px rgba(240,192,48,.5)}
 
 /* PROGRESS BAR */
 .pbar{height:2px;background:var(--border);border-radius:1px;overflow:hidden;min-width:40px}
@@ -561,8 +575,8 @@ footer span{color:var(--acc2)}
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="logo" onclick="nav('players')" style="cursor:pointer">
-    <div class="logo-hex">BFV</div>
-    <div class="logo-text">BFV <span>STATS</span></div>
+    <img src="/gmv-logo.png" alt="logo" style="width:32px;height:32px;object-fit:contain">
+    <div class="logo-text"><span class="logo-gmv">BFV</span> <span>STATS</span></div>
   </div>
   <nav>
     <a onclick="nav('players')" id="nav-players" class="active">Players</a>
@@ -573,7 +587,7 @@ footer span{color:var(--acc2)}
     <a onclick="nav('games')" id="nav-games">Games</a>
     <a onclick="nav('search')" id="nav-search">Search</a>
     <a onclick="nav('chars')" id="nav-chars">Characters</a>
-
+    <a href="https://forum.gmvclan.com/" target="_blank" rel="noopener">Forum</a>
     <span class="btn-join" id="btn-join" onclick="toggleJoinPopup(event)">JOIN
       <div class="join-popup" id="join-popup">
         <div class="jp-title">&#9654; CONNECT TO SERVER</div>
@@ -586,7 +600,7 @@ footer span{color:var(--acc2)}
   </nav>
   <div class="server-pill">
     <div class="dot"></div>
-    <span class="pill-name">BFV Server</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">—</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
+    <span class="pill-name">-{GmV}- AIR WARS</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">10.0.0.70:15567</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
   </div>
 </header>
 
@@ -764,6 +778,25 @@ footer span{color:var(--acc2)}
 
     <!-- SIDEBAR -->
     <div>
+      <div class="widget">
+        <div class="wh">Server Stats</div>
+        <div id="server-stats-box" style="padding:10px 14px 12px">
+          <div class="ss-row">
+            <div class="ss-label">Current Map</div>
+            <div class="ss-val" id="ss-map"><span style="color:var(--lo)">—</span></div>
+          </div>
+          <div class="ss-sep"></div>
+          <div class="ss-row">
+            <div class="ss-label">Avg Ping</div>
+            <div class="ss-val" id="ss-ping"><span style="color:var(--lo)">—</span></div>
+          </div>
+          <div class="ss-sep"></div>
+          <div class="ss-row">
+            <div class="ss-label">Uptime (30d)</div>
+            <div class="ss-val" id="ss-uptime"><span style="color:var(--lo)">—</span></div>
+          </div>
+        </div>
+      </div>
       <div class="widget">
         <div class="wh">Recent Games</div>
         <div id="sidebar-games"></div>
@@ -1310,7 +1343,7 @@ document.addEventListener('click',function(e){
 function esc(s){var d=document.createElement('div');d.textContent=String(s==null?'':s);return d.innerHTML;}
 function fmt(n){return(+(n||0)).toLocaleString();}
 function fmtF(v,d){if(d===undefined)d=2;return(+(v||0)).toFixed(d);}
-function kdHtml(kd){var v=fmtF(kd,3),c=(+kd>1.2)?'kp':(+kd<0.8)?'kn':'';return c?'<span class="'+c+'">'+v+'</span>':v;}
+function kdHtml(kd){var v=fmtF(kd,3),k=+kd,c=k>2.0?'kg':k>=1.0?'kp':'kn';return '<span class="'+c+'">'+v+'</span>';}
 function pbarHtml(pct){return '<div class="pbar"><div class="pbar-fill" style="width:'+Math.min(100,+(pct)||0)+'%"></div></div>';}
 function av(name){return String(name||'?')[0].toUpperCase();}
 function fmtTime(s){return String(s||"").replace("T"," ").replace(/\.\d+$/,"");}
@@ -1498,6 +1531,26 @@ function loadSidebarWeapons(){
   }).catch(function(){});
 }
 
+function loadServerStats(){
+  fetch('/api/stats/server').then(function(r){return r.json();}).then(function(d){
+    var el=document.getElementById('ss-uptime');
+    if(el){
+      var pct=d.uptime_pct||0;
+      var col=pct>=90?'var(--green)':pct>=70?'var(--yellow)':'var(--red)';
+      el.innerHTML='<div class="ss-uptime-bar">'+
+        '<span class="ss-uptime-pct" style="color:'+col+'">'+pct+'%</span>'+
+        '<div class="ss-uptime-track"><div class="ss-uptime-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'+
+        '</div>';
+    }
+    var pingEl=document.getElementById('ss-ping');
+    if(pingEl&&d.avg_ping!=null){
+      var avg=Math.round(d.avg_ping);
+      var cls=avg<80?'ss-ping-good':avg<150?'ss-ping-mid':'ss-ping-bad';
+      pingEl.innerHTML='<span class="'+cls+'">'+avg+' ms</span>';
+    }
+  }).catch(function(){});
+}
+
 function loadSidebarMaps(){
   var el=document.getElementById('sidebar-maps');
   if(!el)return;
@@ -1629,7 +1682,7 @@ function showPlayer(id,nohist){
     setEl('pp-kpis',
       '<div class="pkpi"><div class="pkpi-v">'+fmt(p.score)+'</div><div class="pkpi-l">Score</div></div>'+
       '<div class="pkpi"><div class="pkpi-v">'+fmt(p.kills)+'</div><div class="pkpi-l">Kills</div></div>'+
-      '<div class="pkpi"><div class="pkpi-v">'+fmtF(p.kd,3)+'</div><div class="pkpi-l">K/D</div></div>'+
+      '<div class="pkpi"><div class="pkpi-v">'+kdHtml(p.kd)+'</div><div class="pkpi-l">K/D</div></div>'+
       '<div class="pkpi"><div class="pkpi-v">'+fmt(p.rounds)+'</div><div class="pkpi-l">Rounds</div></div>'+
       '<div class="pkpi"><div class="pkpi-v">'+fmtF(p.sr)+'</div><div class="pkpi-l">S/R</div></div>');
     setEl('pp-dname',esc(p.name));
@@ -2331,6 +2384,9 @@ function fetchLive(){
     if(t2El&&d.team2_name)t2El.textContent=d.team2_name.charAt(0).toUpperCase()+d.team2_name.slice(1);
     livePlayers=d.players||[];
     renderLivePlayers();
+    // Update Server Stats widget (map only — ping comes from /api/stats/server)
+    var ssMap=document.getElementById('ss-map');
+    if(ssMap)ssMap.textContent=d.map_display||'—';
   }).catch(function(){
     var dot=document.getElementById('live-dot');
     if(dot)dot.className='live-dot offline';
@@ -2338,6 +2394,7 @@ function fetchLive(){
     setEl('header-online','offline');
     var hs=document.getElementById('hero-status');
     if(hs){hs.style.color='var(--lo)';hs.textContent='\u25cf Offline';}
+
   });
 }
 var _lastChatTs=-1;
@@ -2439,6 +2496,7 @@ function init(){
   loadSidebarGames();
   loadSidebarWeapons();
   loadSidebarMaps();
+  loadServerStats();
   initWorldClock();
   initSearchForm();
 
