@@ -1,7 +1,9 @@
-# BFV Tracker — Proxmox LXC Installer
+# Battlefield Vietnam Stats for selectbf
 
 A stats tracker for **Battlefield Vietnam** dedicated servers.  
-Runs on a Debian LXC. Built on top of [selectbf](https://github.com/toadle/selectbf) with an optional modern dark web UI.
+Built on top of [selectbf](https://github.com/toadle/selectbf) with a modern dark web UI.
+
+Runs on any **Debian 11/12/13** or **Ubuntu 22.04+** machine — bare metal, VM, or LXC.
 
 ![Modern UI](https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main/docs/bfv-modern.PNG)
 
@@ -23,15 +25,15 @@ Runs on a Debian LXC. Built on top of [selectbf](https://github.com/toadle/selec
 
 ## Requirements
 
-- Debian 11/12/13 or Ubuntu 22.04+ LXC (512 MB RAM minimum, 2 GB disk)
+- Debian 11/12/13 or Ubuntu 22.04+ (bare metal, VM, or LXC — 512 MB RAM minimum, 2 GB disk)
 - BFV dedicated server reachable on the network
-- BFV server log files accessible from this LXC (see [Getting the logs](#getting-the-logs))
+- BFV server log files accessible from this machine (see [Getting the logs](#getting-the-logs))
 
 ---
 
 ## Quick install
 
-Run this inside a fresh Debian LXC as root:
+Run as root on any supported Debian/Ubuntu machine:
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main/install.sh)
@@ -49,7 +51,7 @@ The installer will ask you for:
 | **BFV server host** | IP address of your BFV dedicated server |
 | **BFV game port** | Default: 15567 |
 | **BFV query port** | GameSpy UDP port — default: 23000 |
-| **Log directory** | Where BFV log files are (on this LXC) |
+| **Log directory** | Where BFV log files are (local path on this machine) |
 | **Database credentials** | Name, user, password — auto-generated if left blank |
 
 ---
@@ -57,11 +59,11 @@ The installer will ask you for:
 ## Getting the logs
 
 The stats tracker parses BFV `.log` files to populate the database.  
-The log files must be accessible as a **local path** on the stats LXC.
+The log files must be accessible as a **local path** on the stats machine.
 
 ### Option A — BFV server is on the same machine
 
-If your BFV server runs on the same LXC or machine, point the installer directly at the log folder:
+Point the installer directly at the log folder:
 
 ```
 /opt/bfv/mods/bfvietnam/logs
@@ -73,14 +75,14 @@ That's it — no extra setup needed.
 
 ### Option B — BFV server is on a different machine (most common)
 
-Your BFV server is on a separate LXC, VM, or physical server. You need to make the remote log directory available locally.
+Your BFV server is on a separate machine. You need to make the remote log directory available locally.
 
-#### Method 1 — Bind mount (Proxmox only, recommended)
+#### Method 1 — Bind mount (Proxmox only)
 
 The cleanest option if both LXCs are on the same Proxmox host.  
 Mount the BFV log directory from the game server LXC directly into the stats LXC.
 
-1. **On the Proxmox host**, find the BFV LXC ID (e.g. `114`) and the stats LXC ID (e.g. `110`).
+1. Find the BFV LXC ID (e.g. `114`) and the stats LXC ID (e.g. `110`) on the Proxmox host.
 
 2. Add a bind mount to the stats LXC config:
    ```bash
@@ -100,9 +102,9 @@ Mount the BFV log directory from the game server LXC directly into the stats LXC
 
 #### Method 2 — rsync over SSH (any setup)
 
-Set up periodic rsync from the BFV server to the stats LXC.
+Set up periodic rsync from the BFV server to the stats machine.
 
-**On the stats LXC:**
+**On the stats machine:**
 
 1. Generate an SSH key (no passphrase):
    ```bash
@@ -123,12 +125,11 @@ Set up periodic rsync from the BFV server to the stats LXC.
    ```bash
    crontab -e
    ```
-   Add this line:
+   Add:
    ```
    */5 * * * * rsync -az --delete -e "ssh -i /root/.ssh/bfv_logs -o StrictHostKeyChecking=no" \
        root@<BFV_SERVER_IP>:/opt/bfv/mods/bfvietnam/logs/ /opt/bfv-logs/
    ```
-   Replace `<BFV_SERVER_IP>` with your BFV server's IP address.
 
 5. When the installer asks for the log directory, enter:
    ```
@@ -244,7 +245,7 @@ Test connection: `mysql -u bfvstats -p bfvstats`
 
 ### Parser finds no logs
 Check the log directory path in `.env` (`BFV_LOG_DIR`).  
-Make sure the `www-data` user can read the files:
+Make sure the files are readable:
 ```bash
 ls -la $BFV_LOG_DIR
 chmod a+r $BFV_LOG_DIR/*.log
@@ -252,17 +253,14 @@ chmod a+r $BFV_LOG_DIR/*.log
 
 ### Live server status shows Offline
 The API queries the BFV server via GameSpy UDP on `BFV_HOST:BFV_QUERY_PORT`.  
-Make sure the port is reachable:
+Check the port is reachable:
 ```bash
 nc -u -z -w2 <BFV_HOST> 23000 && echo open || echo closed
 ```
-Check firewall rules on the BFV server LXC if closed.
 
 ---
 
 ## Updating
-
-Pull the latest files and restart:
 
 ```bash
 cd /opt/bfvstats
@@ -274,15 +272,14 @@ curl -fsSL https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main/w
     -o /var/www/bfvstats/index.html
 ```
 
-> **Note:** After updating `index.html`, re-apply your site name and branding with `sed`, or re-run the installer.
+> **Note:** After updating `index.html`, re-apply your site name and branding, or re-run the installer.
 
 ---
 
 ## What's been updated from the original selectbf
 
 The original [selectbf](https://github.com/toadle/selectbf) is legacy software from ~2005.  
-Its own README states: *"Full scale development has ceased for about 10 years now."*  
-The original requirements were PHP 4.3.2+, MySQL 4.0.13+, and Java 1.4+ for the parser.
+Its own README states: *"Full scale development has ceased for about 10 years now."*
 
 This project keeps selectbf's log parser and classic PHP UI as an optional component, but wraps it in a modern, maintained stack:
 
@@ -300,7 +297,6 @@ This project keeps selectbf's log parser and classic PHP UI as an optional compo
 | **Ban management** | Not included | Admin panel — sync from `serverbanlist.con`, add/remove bans |
 | **Duplicate games** | Parser re-processes files, creates duplicates | Dedup filter in API + rsync exclusion list |
 | **Parser trigger** | Manual or FTP cron | HTTP API endpoint + optional cron |
-| **Proxmox support** | None | Native LXC installer with bind-mount docs |
 
 The selectbf PHP parser itself (log parsing logic) is unchanged — it is what reads the BFV XML log files and populates the database. Everything around it has been modernised.
 
