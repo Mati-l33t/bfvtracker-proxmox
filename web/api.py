@@ -56,7 +56,7 @@ def check_password(pw: str) -> bool:
     return hashlib.sha256((pw + salt).encode()).hexdigest() == h
 
 # ─── ROUTES: SYSTEM ───────────────────────────────────────────────────────────
-BFV_HOST = cfg.get("BFV_HOST", "10.0.0.70")
+BFV_HOST = cfg.get("BFV_HOST", "127.0.0.1")
 BFV_QUERY_PORT = int(cfg.get("BFV_QUERY_PORT", 23000))
 BFV_GAME_PORT = int(cfg.get("BFV_GAME_PORT", 15567))
 

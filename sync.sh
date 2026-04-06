@@ -14,6 +14,8 @@ cp /opt/bfvstats/check_uptime.py "$REPO/web/check_uptime.py"
 # ── Strip hardcoded site-specific content ────────────────────────────────────
 python3 - << 'PYEOF'
 import re
+
+# ── index.html ──
 f = '/opt/bfvtracker-repo/web/index.html'
 c = open(f).read()
 c = re.sub(r'<title>BFV Stats[^<]*</title>', '<title>BFV Stats</title>', c)
@@ -23,6 +25,19 @@ c = re.sub(
     '<div class="logo-text"><span class="logo-gmv">BFV</span>',
     c
 )
+# Strip hardcoded server name and IP from header pill
+c = re.sub(
+    r'<span class="pill-name">[^<]*</span><span class="pill-addr">[^<]*<span id="header-addr">[^<]*</span>',
+    '<span class="pill-name">BFV Server</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">—</span>',
+    c
+)
+open(f, 'w').write(c)
+
+# ── api.py ──
+f = '/opt/bfvtracker-repo/web/api.py'
+c = open(f).read()
+# Replace hardcoded fallback IP with placeholder
+c = re.sub(r'cfg\.get\("BFV_HOST",\s*"[^"]+"\)', 'cfg.get("BFV_HOST", "127.0.0.1")', c)
 open(f, 'w').write(c)
 PYEOF
 
