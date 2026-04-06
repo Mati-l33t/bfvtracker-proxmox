@@ -1,7 +1,5 @@
 # Changelog
 
-## [Unreleased]
-
 ## [2026-04-06]
 ### Added
 - Per-player ping summary table (`selectbf_ping_summary`) — stores one running average ping row per player, never grows unboundedly
@@ -13,26 +11,29 @@
 
 ### Changed
 - K/D colors updated: red (<1.0), green (1.0–2.0), gold with glow (>2.0)
-- Logo "GmV" text replaced with configurable placeholder in template
+- Logo text gradient styling
+
+## [2026-04-05]
+### Added
+- Debian 13 added to supported OS list in requirements
 
 ## [2026-04-04]
 ### Added
 - World clock widget in sidebar (Local, New York, London, Kyiv)
 - Top Pilots leaderboard on Characters page (air kills)
 - Ban details panel in admin — shows banned by, reason, timestamp
-- Debian 13 added to supported OS list
 
 ### Fixed
 - Player count showing incorrect numbers
 - Last Games duplicates on player profile
 - Player tracking inconsistencies
 
-## [2026-03-xx]
+## [2026-04-03]
 ### Added
 - Top Repairers and Top Healers sections on Characters page
 - Weapon categories page with top-25 player leaderboards per weapon category
 - Pulsing JOIN button in nav bar with live server IP
-- Admin ban management with SSH-based ban file sync
+- Screenshots added to README
 
 ### Fixed
 - Player profile 404 for players missing from cache ranking table
@@ -40,8 +41,10 @@
 - Duplicate games: deduplicated at API query level
 - Live scoreboard, chat and parser dedup fixes
 - Ban sync fixes
+- JOIN button pulse/hover CSS
+- Hardcoded server values replaced with installer placeholders
 
-## [2026-03-13] — Initial Release
+## [2026-04-02] — Initial Release
 ### Added
 - BFV Stats LXC installer (Proxmox, Debian 12)
 - FastAPI backend (`api.py`) with full selectbf MySQL integration
@@ -51,3 +54,4 @@
 - Map statistics with win rates
 - Clan rankings
 - Full installer script with nginx, MariaDB, uvicorn systemd service
+- Full setup README with selectbf modernisation notes
