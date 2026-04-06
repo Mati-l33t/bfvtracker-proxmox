@@ -1,23 +1,18 @@
 # Changelog
 
-## [2026-04-06b]
-### Added
-- Map image in Current Map sidebar widget with map name overlaid
-
-### Changed
-- Renamed "Server Stats" widget to "Current Map"
-- Live scoreboard and chat polling reduced from 5s to 10s to reduce load on BFV server
-
 ## [2026-04-06]
 ### Added
+- Map image in Current Map sidebar widget with map name overlaid
 - Per-player ping summary table (`selectbf_ping_summary`) — stores one running average ping row per player, never grows unboundedly
 - Round-transition detection in live API — pings are collected during a round and flushed to DB when round ends
 - Avg ping shown on player profile page KPI bar (appears once data is collected)
 - Avg ping survives API restarts via persistent cache file
-- Server Stats widget on front page sidebar (above Recent Games) — shows current map, avg ping, 30-day uptime %
+- Current Map widget on front page sidebar (above Recent Games) — shows map image, map name, avg ping, 30-day uptime %
 - New `/api/stats/server` endpoint returning uptime % and avg ping
 
 ### Changed
+- Renamed "Server Stats" widget to "Current Map"
+- Live scoreboard and chat polling reduced from 5s to 10s to reduce load on BFV server
 - K/D colors updated: red (<1.0), green (1.0–2.0), gold with glow (>2.0)
 - Logo text gradient styling
 
