@@ -44,7 +44,7 @@ The installer will ask you for:
 | Prompt | Description |
 |--------|-------------|
 | **UI choice** | Modern / Classic / Both |
-| **Admin password** | Password for the admin panel (modern UI only) |
+| **Admin password** | Protects both the modern UI admin panel and the classic selectbf admin panel |
 | **Site name** | Your clan or server name — shown in the header |
 | **Forum URL** | Optional link in the nav bar |
 | **Logo URL** | Optional image URL (PNG/JPG) — leave blank for default |
