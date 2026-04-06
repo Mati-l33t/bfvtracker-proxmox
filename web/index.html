@@ -779,21 +779,25 @@ footer span{color:var(--acc2)}
     <!-- SIDEBAR -->
     <div>
       <div class="widget">
-        <div class="wh">Server Stats</div>
-        <div id="server-stats-box" style="padding:10px 14px 12px">
-          <div class="ss-row">
-            <div class="ss-label">Current Map</div>
-            <div class="ss-val" id="ss-map"><span style="color:var(--lo)">—</span></div>
+        <div class="wh">Current Map</div>
+        <div id="server-stats-box">
+          <div id="ss-map-img-wrap" style="position:relative;width:100%;height:110px;overflow:hidden;background:var(--bg3)">
+            <img id="ss-map-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none">
+            <div id="ss-map-img-fallback" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">
+              <span style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--lo)">No image</span>
+            </div>
+            <div id="ss-map" style="position:absolute;bottom:0;left:0;right:0;padding:5px 10px;background:linear-gradient(transparent,rgba(0,0,0,.75));font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--hi)"><span style="color:var(--lo)">—</span></div>
           </div>
-          <div class="ss-sep"></div>
-          <div class="ss-row">
-            <div class="ss-label">Avg Ping</div>
-            <div class="ss-val" id="ss-ping"><span style="color:var(--lo)">—</span></div>
-          </div>
-          <div class="ss-sep"></div>
-          <div class="ss-row">
-            <div class="ss-label">Uptime (30d)</div>
-            <div class="ss-val" id="ss-uptime"><span style="color:var(--lo)">—</span></div>
+          <div style="padding:8px 14px 10px">
+            <div class="ss-row">
+              <div class="ss-label">Avg Ping</div>
+              <div class="ss-val" id="ss-ping"><span style="color:var(--lo)">—</span></div>
+            </div>
+            <div class="ss-sep"></div>
+            <div class="ss-row">
+              <div class="ss-label">Uptime (30d)</div>
+              <div class="ss-val" id="ss-uptime"><span style="color:var(--lo)">—</span></div>
+            </div>
           </div>
         </div>
       </div>
@@ -2388,6 +2392,9 @@ function fetchLive(){
     // Update Server Stats widget (map only — ping comes from /api/stats/server)
     var ssMap=document.getElementById('ss-map');
     if(ssMap)ssMap.textContent=d.map_display||'—';
+    var ssImg=document.getElementById('ss-map-img');
+    var ssFb=document.getElementById('ss-map-img-fallback');
+    if(ssImg&&ssFb){var src=mapImg(d.map||'');if(src){ssImg.src=src;ssImg.style.display='block';ssFb.style.display='none';}else{ssImg.style.display='none';ssFb.style.display='flex';}}
   }).catch(function(){
     var dot=document.getElementById('live-dot');
     if(dot)dot.className='live-dot offline';
@@ -2445,8 +2452,8 @@ function fetchRoundHistory(){
 }
 function startLive(){
   fetchLive();fetchRoundHistory();fetchChat();
-  liveTimer=setInterval(fetchLive,5000);
-  setInterval(fetchChat,5000);
+  liveTimer=setInterval(fetchLive,10000);
+  setInterval(fetchChat,10000);
 }
 
 // ── WORLD CLOCK ─────────────────────────────────────────────────────────────────

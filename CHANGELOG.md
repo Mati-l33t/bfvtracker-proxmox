@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026-04-06b]
+### Added
+- Map image in Current Map sidebar widget with map name overlaid
+
+### Changed
+- Renamed "Server Stats" widget to "Current Map"
+- Live scoreboard and chat polling reduced from 5s to 10s to reduce load on BFV server
+
 ## [2026-04-06]
 ### Added
 - Per-player ping summary table (`selectbf_ping_summary`) — stores one running average ping row per player, never grows unboundedly
