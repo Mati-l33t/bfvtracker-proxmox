@@ -399,16 +399,18 @@ def summary():
 def server_stats():
     row = q1("""
         SELECT
-          COUNT(DISTINCT DATE(starttime)) AS active_days,
-          GREATEST(DATEDIFF(NOW(), MIN(starttime)), 1) AS total_days
-        FROM selectbf_rounds
-        WHERE starttime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-          AND starttime IS NOT NULL
+          SUM(online) AS up_count,
+          COUNT(*) AS total_count
+        FROM selectbf_uptime_log
+        WHERE ts >= DATE_SUB(NOW(), INTERVAL 30 DAY)
     """)
-    active = int(row["active_days"] or 0) if row else 0
-    total  = int(row["total_days"]  or 30) if row else 30
-    uptime_pct = round(active / total * 100, 1)
-    return {"uptime_pct": uptime_pct, "uptime_days": active, "window_days": total, "avg_ping": _ping_cache["avg"]}
+    if row and row["total_count"]:
+        uptime_pct = round(int(row["up_count"] or 0) / int(row["total_count"]) * 100, 1)
+        total_count = int(row["total_count"])
+    else:
+        uptime_pct = None
+        total_count = 0
+    return {"uptime_pct": uptime_pct, "total_checks": total_count, "avg_ping": _ping_cache["avg"]}
 
 # ─── ROUTES: AUTH ─────────────────────────────────────────────────────────────
 @app.post("/api/admin/login")

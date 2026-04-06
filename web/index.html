@@ -1539,12 +1539,16 @@ function loadServerStats(){
   fetch('/api/stats/server').then(function(r){return r.json();}).then(function(d){
     var el=document.getElementById('ss-uptime');
     if(el){
-      var pct=d.uptime_pct||0;
-      var col=pct>=90?'var(--green)':pct>=70?'var(--yellow)':'var(--red)';
-      el.innerHTML='<div class="ss-uptime-bar">'+
-        '<span class="ss-uptime-pct" style="color:'+col+'">'+pct+'%</span>'+
-        '<div class="ss-uptime-track"><div class="ss-uptime-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'+
-        '</div>';
+      if(d.uptime_pct==null){
+        el.innerHTML='<span style="color:var(--lo);font-size:10px">Collecting...</span>';
+      }else{
+        var pct=d.uptime_pct;
+        var col=pct>=90?'var(--green)':pct>=70?'var(--yellow)':'var(--red)';
+        el.innerHTML='<div class="ss-uptime-bar">'+
+          '<span class="ss-uptime-pct" style="color:'+col+'">'+pct+'%</span>'+
+          '<div class="ss-uptime-track"><div class="ss-uptime-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'+
+          '</div>';
+      }
     }
     var pingEl=document.getElementById('ss-ping');
     if(pingEl&&d.avg_ping!=null){

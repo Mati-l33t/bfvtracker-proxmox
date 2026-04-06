@@ -2,6 +2,12 @@
 
 ## [2026-04-06]
 ### Added
+- Real server uptime tracking via GameSpy UDP ping every minute (cron job + `selectbf_uptime_log` table)
+- `check_uptime.py` script — logs up/down every minute, auto-prunes entries older than 31 days
+- Uptime widget shows "Collecting..." until enough data is gathered, then shows true % over last 30 days
+
+
+### Added
 - Map image in Current Map sidebar widget with map name overlaid
 - Per-player ping summary table (`selectbf_ping_summary`) — stores one running average ping row per player, never grows unboundedly
 - Round-transition detection in live API — pings are collected during a round and flushed to DB when round ends
