@@ -1684,7 +1684,8 @@ function showPlayer(id,nohist){
       '<div class="pkpi"><div class="pkpi-v">'+fmt(p.kills)+'</div><div class="pkpi-l">Kills</div></div>'+
       '<div class="pkpi"><div class="pkpi-v">'+kdHtml(p.kd)+'</div><div class="pkpi-l">K/D</div></div>'+
       '<div class="pkpi"><div class="pkpi-v">'+fmt(p.rounds)+'</div><div class="pkpi-l">Rounds</div></div>'+
-      '<div class="pkpi"><div class="pkpi-v">'+fmtF(p.sr)+'</div><div class="pkpi-l">S/R</div></div>');
+      '<div class="pkpi"><div class="pkpi-v">'+fmtF(p.sr)+'</div><div class="pkpi-l">S/R</div></div>'+
+      (d.avg_ping!=null?'<div class="pkpi"><div class="pkpi-v" style="color:var(--mid)">'+d.avg_ping+'ms</div><div class="pkpi-l">Avg Ping</div></div>':''));
     setEl('pp-dname',esc(p.name));
     setEl('pp-dseen',fmtTime(p.last_seen||'\u2014'));
     setEl('pp-drounds',fmt(p.rounds));

@@ -121,7 +121,55 @@ def _write_banfile_lines(lines: list[str]) -> None:
     _ssh(f"printf '%s' '{escaped}' > {shlex.quote(BAN_FILE_PATH)}")
 
 _wan_ip_cache: dict = {"ip": None, "ts": 0}
-_ping_cache: dict = {"avg": None}
+_PING_FILE = "/opt/bfvstats/ping_cache.json"
+def _load_ping_cache():
+    try:
+        import json as _json
+        return _json.load(open(_PING_FILE))
+    except Exception:
+        return {"avg": None}
+_ping_cache: dict = _load_ping_cache()
+
+# Round-transition ping tracker: {player_name: [ping, ...]}
+_round_pings: dict = {}
+_last_round_sig: str = ""  # map+tickets signature to detect round changes
+
+def _flush_round_pings():
+    """Average each player's pings for the round and upsert into ping summary table."""
+    if not _round_pings:
+        return
+    try:
+        conn = db()
+        with conn.cursor() as c:
+            for name, pings in _round_pings.items():
+                if not pings:
+                    continue
+                round_avg = round(sum(pings) / len(pings), 1)
+                # Resolve player_id by name
+                c.execute("SELECT id FROM selectbf_players WHERE name=%s LIMIT 1", (name,))
+                row = c.fetchone()
+                if not row:
+                    continue
+                pid = row["id"]
+                c.execute("SELECT avg_ping, sample_count FROM selectbf_ping_summary WHERE player_id=%s", (pid,))
+                existing = c.fetchone()
+                if existing:
+                    n = existing["sample_count"]
+                    new_avg = round((existing["avg_ping"] * n + round_avg) / (n + 1), 1)
+                    c.execute(
+                        "UPDATE selectbf_ping_summary SET avg_ping=%s, sample_count=%s, updated_at=NOW() WHERE player_id=%s",
+                        (new_avg, n + 1, pid)
+                    )
+                else:
+                    c.execute(
+                        "INSERT INTO selectbf_ping_summary (player_id, avg_ping, sample_count) VALUES (%s,%s,1)",
+                        (pid, round_avg)
+                    )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+    _round_pings.clear()
 
 def _get_wan_ip() -> str:
     now = time.time()
@@ -208,9 +256,28 @@ def live():
             "public_port": BFV_GAME_PORT,
             "players": players,
         }
+        # Round-transition detection
+        global _last_round_sig, _round_pings
+        t1 = result.get("tickets_team1") or 0
+        t2 = result.get("tickets_team2") or 0
+        sig = f"{map_slug}:{t1}:{t2}"
         active = [p for p in players if p["ping"] > 0]
-        if active:
-            _ping_cache["avg"] = round(sum(p["ping"] for p in active) / len(active), 1)
+        if _last_round_sig and sig != _last_round_sig:
+            # Round changed — flush collected pings to DB
+            _flush_round_pings()
+        _last_round_sig = sig
+        # Accumulate pings for current round
+        for p in active:
+            _round_pings.setdefault(p["name"], []).append(p["ping"])
+        # Update global avg from DB for the stats widget
+        try:
+            row = q1("SELECT AVG(avg_ping) AS avg FROM selectbf_ping_summary")
+            if row and row["avg"] is not None:
+                _ping_cache["avg"] = round(float(row["avg"]), 1)
+                import json as _json
+                _json.dump(_ping_cache, open(_PING_FILE, "w"))
+        except Exception:
+            pass
         return result
     except Exception:
         raise HTTPException(status_code=503, detail="Server offline")
@@ -545,6 +612,7 @@ def player_detail(player_id: int):
            ORDER BY g.starttime DESC LIMIT 20""",
         [player_id])
 
+    ping_row = q1("SELECT avg_ping, sample_count FROM selectbf_ping_summary WHERE player_id=%s", [player_id])
     return {
         "player":        p,
         "nicknames":     nicknames,
@@ -555,6 +623,7 @@ def player_detail(player_id: int):
         "top_assassins": top_assassins,
         "map_perf":      map_perf,
         "last_games":    last_games,
+        "avg_ping":      round(float(ping_row["avg_ping"]), 1) if ping_row else None,
     }
 
 # ─── ROUTES: GAMES ────────────────────────────────────────────────────────────
