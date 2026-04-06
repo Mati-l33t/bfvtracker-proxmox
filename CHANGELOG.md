@@ -1,6 +1,11 @@
 # Changelog
 
 ## [2026-04-06]
+### Fixed
+- install.sh now creates selectbf_ping_summary and selectbf_uptime_log tables on fresh install
+- install.sh now installs check_uptime.py and sets up cron job on fresh install
+
+
 ### Added
 - Real server uptime tracking via GameSpy UDP ping every 30 minutes (cron job + `selectbf_uptime_log` table)
 - `check_uptime.py` script — logs up/down every minute, auto-prunes entries older than 31 days

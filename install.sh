@@ -388,6 +388,19 @@ CREATE TABLE IF NOT EXISTS selectbf_clan_tags (
 CREATE INDEX IF NOT EXISTS idx_ps_round_id     ON selectbf_playerstats (round_id);
 CREATE INDEX IF NOT EXISTS idx_games_starttime ON selectbf_games       (starttime);
 CREATE INDEX IF NOT EXISTS idx_rounds_game_id  ON selectbf_rounds      (game_id);
+
+CREATE TABLE IF NOT EXISTS selectbf_ping_summary (
+    player_id    INT UNSIGNED NOT NULL PRIMARY KEY,
+    avg_ping     FLOAT NOT NULL DEFAULT 0,
+    sample_count INT UNSIGNED NOT NULL DEFAULT 0,
+    updated_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS selectbf_uptime_log (
+    id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    ts     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    online TINYINT(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 SQL
     success "DB schema and indexes applied."
 
@@ -398,6 +411,15 @@ SQL
     systemctl enable --quiet bfvstats-api
     systemctl restart bfvstats-api
     success "bfvstats-api service started."
+
+    # Uptime check script + cron job (every 30 minutes)
+    curl -fsSL "${REPO_RAW}/web/check_uptime.py" -o "$INSTALL_DIR/check_uptime.py"
+    chmod +x "$INSTALL_DIR/check_uptime.py"
+    # Add cron job only if not already present
+    if ! crontab -l 2>/dev/null | grep -q "check_uptime.py"; then
+        (crontab -l 2>/dev/null; echo "*/30 * * * * ${INSTALL_DIR}/venv/bin/python3 ${INSTALL_DIR}/check_uptime.py") | crontab -
+    fi
+    success "Uptime check script installed (runs every 30 minutes)."
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
