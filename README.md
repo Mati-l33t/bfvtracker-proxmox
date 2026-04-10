@@ -1,7 +1,7 @@
 # Battlefield Vietnam Stats for selectbf
 
 A stats tracker for **Battlefield Vietnam** dedicated servers.  
-Built on top of [selectbf](https://github.com/toadle/selectbf) with a modern dark web UI.
+Built on top of [selectbf](https://github.com/toadle/selectbf) with a modern web UI featuring dark and light themes.
 
 Runs on any **Debian 11/12/13** or **Ubuntu 22.04+** machine — bare metal, VM, or LXC.
 
@@ -18,7 +18,7 @@ Runs on any **Debian 11/12/13** or **Ubuntu 22.04+** machine — bare metal, VM,
 | **MariaDB** | Database storing all match stats |
 | **selectbf** | PHP log parser + classic stats web UI |
 | **FastAPI backend** | REST API for rankings, players, maps, live server status |
-| **Modern UI** | Single-page dark app — live scoreboard, rankings, admin panel |
+| **Modern UI** | Single-page app — live scoreboard, rankings, admin panel; dark/light theme toggle |
 | **nginx** | Web server; modern UI on `:8080`, classic on `:8081` |
 
 ---
@@ -291,7 +291,7 @@ This project keeps selectbf's log parser and classic PHP UI as an optional compo
 | **Log access** | FTP download only | Local path, bind-mount, rsync, or sshfs |
 | **Setup** | Manual: edit config files, run `_setup.php` in browser | Fully automated one-line installer |
 | **Admin auth** | MD5 password (PHP session) | bcrypt hash (modern UI) |
-| **Stats UI** | Classic PHP pages only | Optional modern dark SPA with live scoreboard, rankings, player profiles |
+| **Stats UI** | Classic PHP pages only | Optional modern SPA with dark/light theme, live scoreboard, rankings, player profiles |
 | **Live server** | Not included | GameSpy UDP query — live player list, scores, tickets |
 | **Live chat** | Not included | Real-time BFV chat log parsed from XML |
 | **Ban management** | Not included | Admin panel — sync from `serverbanlist.con`, add/remove bans |
