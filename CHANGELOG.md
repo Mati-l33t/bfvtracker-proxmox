@@ -1,5 +1,17 @@
 # Changelog
 
+## [2026-04-10] — Light theme, UI polish
+### Added
+- Light/dark theme toggle — moon/sun icon button in navbar between JOIN and Forum; switches theme instantly, persists across page loads via localStorage; dark theme unchanged
+- Light theme — steel-blue gray palette with deep teal accent (#0071a0); easy on the eyes, professional look
+
+### Fixed
+- Table rank column (# ) was too wide — added `width:1px` shrink-wrap on first column so names sit immediately next to numbers (vehicles, characters, weapons pages)
+- Linked player names (Top Pilots, Top Repairers, Top Healers, weapons leaderboards) were dimmer than non-linked names — added `tbody td a.hi` rule so brightness is consistent
+- Search fields (Player Name, Server Name) showed browser autofill/saved emails — added `autocomplete="off"`
+- Admin link moved from navbar to footer — less visible to regular users, still functional
+
+
 ## [2026-04-10] — Player merge tool
 ### Added
 - Admin panel: Merge Duplicate Players tool — search by name, shows all matching records with keyhash (truncated), last-seen date, score/kills/rounds; most recently used keyhash is highlighted as LAST USED and pre-selected as primary; merge button reassigns all stat tables to primary and recalculates cache_ranking

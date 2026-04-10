@@ -343,6 +343,8 @@ tbody td{
 }
 tbody td.tl{text-align:left}
 tbody td.hi{color:var(--text)}
+tbody td a.hi{color:var(--text)}
+thead th:first-child,tbody td:first-child{width:1px}
 /* stagger */
 tbody tr:nth-child(1){animation-delay:.03s}
 tbody tr:nth-child(2){animation-delay:.06s}
@@ -1014,7 +1016,121 @@ footer span{color:rgba(0,229,255,.35)}
   nav{order:unset;width:auto;overflow-x:unset;flex-wrap:unset;padding-bottom:0}
   .server-pill{display:none}
 }
+
+/* ══════════════════════════════════════════════════════
+   LIGHT THEME
+══════════════════════════════════════════════════════ */
+[data-theme="light"]{
+  --bg-deep:#e8ecf2;
+  --bg-panel:#dde3ec;
+  --bg-card:#d1d9e4;
+  --bg-elevated:#c6cfdc;
+  --border:#adbacb;
+  --border-glow:#8fa3ba;
+  --accent:#0071a0;
+  --accent-dim:rgba(0,113,160,.11);
+  --accent2:rgba(0,113,160,.2);
+  --text:#0d1820;
+  --text-dim:#263d52;
+  --text-muted:#5c7a90;
+  --positive:#00695c;
+  --negative:#b71c1c;
+  --warning:#bf360c;
+  --gold:#8a6914;
+  --silver:#6b7a87;
+  --bronze:#7a5c34;
+  --bg:var(--bg-deep);
+  --bg2:var(--bg-panel);
+  --bg3:var(--bg-card);
+  --bg4:var(--bg-elevated);
+  --acc:var(--accent);
+  --acc2:rgba(0,113,160,.2);
+  --acc-glow:var(--accent-dim);
+  --green:var(--positive);
+  --red:var(--negative);
+  --yellow:var(--gold);
+  --hi:var(--text);
+  --mid:var(--text-dim);
+  --lo:var(--text-muted);
+  --border2:rgba(100,130,160,.3);
+}
+[data-theme="light"] body{background:var(--bg-deep);color:var(--text)}
+[data-theme="light"] body::before{
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%,rgba(0,113,160,.07),transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%,rgba(80,120,170,.05),transparent);
+}
+[data-theme="light"] body::after{opacity:.012}
+[data-theme="light"] .topbar{background:rgba(215,223,234,.97)}
+[data-theme="light"] .topbar::after{opacity:.35}
+[data-theme="light"] .hero{background:var(--bg-panel)}
+[data-theme="light"] .hstat:hover{background:rgba(0,113,160,.03)}
+[data-theme="light"] .server-pill{background:rgba(0,105,92,.07);border-color:rgba(0,105,92,.28);color:var(--positive)}
+[data-theme="light"] .dot{background:var(--positive)}
+[data-theme="light"] .join-popup{background:var(--bg-card);border-color:rgba(0,113,160,.28);box-shadow:0 8px 32px rgba(0,0,0,.14)}
+[data-theme="light"] .jp-title{color:var(--accent)}
+[data-theme="light"] .jp-addr{color:var(--text)}
+[data-theme="light"] .jp-copy{background:var(--accent-dim);color:var(--accent);border-color:rgba(0,113,160,.28)}
+[data-theme="light"] .jp-copy:hover{background:var(--accent);color:#fff}
+[data-theme="light"] .btn-join{color:#fff !important}
+[data-theme="light"] .btn-join:hover{background:#1a8fc4 !important;border-color:#1a8fc4 !important}
+[data-theme="light"] .logo-gmv{color:var(--accent);-webkit-text-fill-color:var(--accent)}
+[data-theme="light"] .logo-sub{color:var(--text);-webkit-text-fill-color:var(--text)}
+[data-theme="light"] .logo-hex{box-shadow:0 0 16px rgba(0,113,160,.2)}
+[data-theme="light"] nav a:hover{color:var(--accent)}
+[data-theme="light"] nav a.active{color:var(--accent);border-bottom-color:var(--accent)}
+[data-theme="light"] #hero-players{background:linear-gradient(135deg,var(--accent),#0091a7);-webkit-background-clip:text;background-clip:text}
+[data-theme="light"] .stitle::before{background:var(--accent);box-shadow:0 0 8px rgba(0,113,160,.3)}
+[data-theme="light"] .bc span.cur{color:var(--accent)}
+[data-theme="light"] thead tr{background:var(--bg-elevated)}
+[data-theme="light"] thead th{background:var(--bg-card);border-bottom-color:var(--border)}
+[data-theme="light"] tbody tr{border-bottom-color:rgba(100,130,160,.28)}
+[data-theme="light"] tbody tr:hover{background:rgba(0,113,160,.04)}
+[data-theme="light"] .card{background:var(--bg-panel);border-color:var(--border)}
+[data-theme="light"] .card-hdr{background:var(--bg-card);border-bottom-color:var(--border)}
+[data-theme="light"] .back-btn{background:var(--bg-card);border-color:var(--border);color:var(--text-dim)}
+[data-theme="light"] .back-btn:hover{color:var(--text);border-color:var(--border-glow)}
+[data-theme="light"] .pcard{background:var(--bg-card);border-left-color:var(--border);border-right-color:var(--border);border-bottom-color:var(--border)}
+[data-theme="light"] .pcard::after{color:var(--text);opacity:.07}
+[data-theme="light"] .pcard:hover{border-color:var(--border-glow)}
+[data-theme="light"] .rh-row:hover{background:rgba(0,113,160,.04)}
+[data-theme="light"] .rh-row-hdr{background:var(--bg-card);border-bottom-color:var(--border)}
+[data-theme="light"] .round-hdr{background:var(--bg-card);border-bottom-color:var(--border)}
+[data-theme="light"] .round-hist-hdr{background:var(--bg-card);border-bottom-color:var(--border)}
+[data-theme="light"] .lc-hdr{background:var(--bg-card);border-bottom-color:var(--border)}
+[data-theme="light"] .drow{border-bottom-color:rgba(100,130,160,.28)}
+[data-theme="light"] .drow:nth-child(even){background:var(--bg-card)}
+[data-theme="light"] .ban-hdr-row{background:var(--bg-card);border-bottom-color:var(--border)}
+[data-theme="light"] .kp{color:var(--positive)}
+[data-theme="light"] .kn{color:var(--negative)}
+[data-theme="light"] #ss-map{color:#fff !important}
+[data-theme="light"] footer{color:var(--text-muted)}
+[data-theme="light"] footer a{color:var(--accent)}
+[data-theme="light"] footer span{color:rgba(0,113,160,.45)}
+[data-theme="light"] .s-input,[data-theme="light"] .s-select{background:var(--bg-card);border-color:var(--border);color:var(--text)}
+[data-theme="light"] .fbtn{background:var(--bg-card);border-color:var(--border);color:var(--text-dim)}
+[data-theme="light"] .fbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+[data-theme="light"] .ticket-grid>div,[data-theme="light"] .team-stats-grid>div{background:var(--bg-card);border-color:var(--border)}
+[data-theme="light"] .map-hero{background:var(--bg-panel);border-color:var(--border)}
+/* theme toggle button */
+.theme-toggle{
+  background:none;border:1px solid var(--border);border-radius:3px;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  color:var(--text-muted);cursor:pointer;flex-shrink:0;margin:0 4px;padding:0;
+  transition:color .2s,border-color .2s,background .2s;
+}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
+.theme-toggle svg{width:13px;height:13px;transition:transform .35s}
+.theme-toggle:hover svg{transform:rotate(18deg)}
+.t-moon{display:block}
+.t-sun{display:none}
+[data-theme="light"] .t-moon{display:none}
+[data-theme="light"] .t-sun{display:block}
+
 </style>
+<script>
+(function(){try{var t=localStorage.getItem('bfv_theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}}());
+</script>
 </head>
 <body>
 
@@ -1037,7 +1153,7 @@ footer span{color:rgba(0,229,255,.35)}
     <a onclick="nav('search')" id="nav-search">Search</a>
     <a onclick="nav('chars')" id="nav-chars">Characters</a>
     <a href="#" target="_blank" rel="noopener">Forum</a>
-    <a onclick="nav('admin')" id="nav-admin" style="color:var(--red)">Admin</a>
+
     <div class="mob-join-row">
       <span class="btn-join" onclick="toggleJoinPopupMob(event)">JOIN
         <div class="join-popup" id="join-popup-mob">
@@ -1049,7 +1165,11 @@ footer span{color:rgba(0,229,255,.35)}
       </span>
     </div>
   </nav>
-  <span class="btn-join" id="btn-join" onclick="toggleJoinPopup(event)" style="flex-shrink:0;margin-left:12px">JOIN
+  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Switch theme">
+    <svg class="t-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="t-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  </button>
+    <span class="btn-join" id="btn-join" onclick="toggleJoinPopup(event)" style="flex-shrink:0;margin-left:12px">JOIN
     <div class="join-popup" id="join-popup">
       <div class="jp-title">&#9654; CONNECT TO SERVER</div>
       <div class="jp-addr" id="join-popup-addr">—</div>
@@ -1434,11 +1554,11 @@ footer span{color:rgba(0,229,255,.35)}
     <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;align-items:end;flex-wrap:wrap">
       <div>
         <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Player Name</div>
-        <input class="s-input" style="width:100%" type="text" id="s-name" placeholder="Player name...">
+        <input class="s-input" style="width:100%" type="text" id="s-name" autocomplete="off" placeholder="Player name...">
       </div>
       <div>
         <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Server Name</div>
-        <input class="s-input" style="width:100%" type="text" id="s-server" placeholder="Server name...">
+        <input class="s-input" style="width:100%" type="text" id="s-server" autocomplete="off" placeholder="Server name...">
       </div>
       <div>
         <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Day</div>
@@ -1679,9 +1799,10 @@ footer span{color:rgba(0,229,255,.35)}
 </div>
 
 <footer>
-  Battlefield Vietnam Stats &nbsp;·&nbsp;
+  <a onclick="nav('admin')" id="nav-admin" style="color:var(--text-muted);font-size:.65rem;text-decoration:none">Admin</a> &nbsp;&middot;&nbsp;
+  Battlefield Vietnam Stats &nbsp;&middot;&nbsp;
   <a href="https://github.com/Mati-l33t" target="_blank" rel="noopener" style="color:var(--acc);text-decoration:none;transition:.12s" onmouseover="this.style.color='var(--hi)'" onmouseout="this.style.color='var(--acc)'">-{GmV}- m@gic</a>
-  © 2026 &nbsp;·&nbsp; Some rights reserved
+  &copy; 2026 &nbsp;&middot;&nbsp; Some rights reserved
 </footer>
 
 <script>
@@ -3097,6 +3218,15 @@ function init(){
 }
 
 document.addEventListener('DOMContentLoaded',init);
+
+// ── THEME TOGGLE ─────────────────────────────────────────────────────────────
+function toggleTheme(){
+  var t=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light';
+  if(t==='dark')document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme','light');
+  try{localStorage.setItem('bfv_theme',t);}catch(e){}
+}
+
 </script>
 </body>
 </html>
