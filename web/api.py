@@ -1114,3 +1114,80 @@ async def change_password(request: Request, _: None = Depends(verify_admin)):
     global ADMIN_HASH
     ADMIN_HASH = new_hash
     return {"ok": True}
+
+
+# ─── ROUTES: PLAYER MERGE ─────────────────────────────────────────────────────
+@app.get("/api/admin/merge/search")
+def merge_search(name: str = Query(""), _: None = Depends(verify_admin)):
+    rows = q("""
+        SELECT p.id, p.name, p.keyhash,
+               MAX(r.endtime) AS last_seen,
+               cr.score, cr.kills, cr.deaths, cr.rounds_played, cr.rank
+        FROM selectbf_players p
+        LEFT JOIN selectbf_playerstats ps ON ps.player_id = p.id
+        LEFT JOIN selectbf_rounds r ON r.id = ps.round_id
+        LEFT JOIN selectbf_cache_ranking cr ON cr.player_id = p.id
+        WHERE p.name LIKE %s
+        GROUP BY p.id
+        ORDER BY last_seen DESC
+    """, [f"%{name}%"])
+    return rows
+
+@app.post("/api/admin/merge")
+async def merge_players(request: Request, _: None = Depends(verify_admin)):
+    body = await request.json()
+    primary_id    = int(body["primary_id"])
+    secondary_ids = [int(i) for i in body["secondary_ids"]]
+    if not secondary_ids:
+        raise HTTPException(400, "No secondary players specified")
+    if primary_id in secondary_ids:
+        raise HTTPException(400, "Primary cannot be in secondary list")
+
+    conn = db()
+    try:
+        with conn.cursor() as c:
+            for sid in secondary_ids:
+                c.execute("UPDATE selectbf_playerstats     SET player_id=%s WHERE player_id=%s", [primary_id, sid])
+                c.execute("UPDATE selectbf_kills_player    SET player_id=%s WHERE player_id=%s", [primary_id, sid])
+                c.execute("UPDATE selectbf_kills_player    SET victim_id=%s  WHERE victim_id=%s",  [primary_id, sid])
+                c.execute("UPDATE selectbf_kills_weapon    SET player_id=%s WHERE player_id=%s", [primary_id, sid])
+                c.execute("UPDATE selectbf_drives          SET player_id=%s WHERE player_id=%s", [primary_id, sid])
+                c.execute("UPDATE selectbf_kits            SET player_id=%s WHERE player_id=%s", [primary_id, sid])
+                c.execute("UPDATE selectbf_heals           SET player_id=%s WHERE player_id=%s", [primary_id, sid])
+                c.execute("UPDATE selectbf_repairs         SET player_id=%s WHERE player_id=%s", [primary_id, sid])
+                c.execute("UPDATE selectbf_tks             SET player_id=%s WHERE player_id=%s", [primary_id, sid])
+                c.execute("UPDATE selectbf_tks             SET victim_id=%s  WHERE victim_id=%s",  [primary_id, sid])
+                c.execute("UPDATE selectbf_selfkills       SET player_id=%s WHERE player_id=%s", [primary_id, sid])
+                c.execute("UPDATE selectbf_playtimes       SET player_id=%s WHERE player_id=%s", [primary_id, sid])
+                c.execute("""INSERT IGNORE INTO selectbf_nicknames (player_id, nickname, times_used)
+                             SELECT %s, nickname, times_used FROM selectbf_nicknames WHERE player_id=%s""",
+                          [primary_id, sid])
+                c.execute("DELETE FROM selectbf_nicknames          WHERE player_id=%s", [sid])
+                c.execute("DELETE FROM selectbf_ping_summary       WHERE player_id=%s", [sid])
+                c.execute("DELETE FROM selectbf_cache_ranking      WHERE player_id=%s", [sid])
+                c.execute("DELETE FROM selectbf_players            WHERE id=%s", [sid])
+
+            # Recalculate primary cache_ranking from merged raw data
+            c.execute("""
+                REPLACE INTO selectbf_cache_ranking
+                    (player_id, playername, score, kills, deaths, kdrate, tks,
+                     captures, attacks, defences, objectives, heals, repairs,
+                     first, second, third, rounds_played)
+                SELECT p.id, p.name,
+                    SUM(ps.score), SUM(ps.kills), SUM(ps.deaths),
+                    ROUND(SUM(ps.kills)/NULLIF(SUM(ps.deaths),0),4),
+                    SUM(ps.tks), SUM(ps.captures), SUM(ps.attacks),
+                    SUM(ps.defences), SUM(ps.objectives), SUM(ps.heals),
+                    SUM(ps.repairs), SUM(ps.first), SUM(ps.second), SUM(ps.third),
+                    COUNT(ps.id)
+                FROM selectbf_players p
+                JOIN selectbf_playerstats ps ON ps.player_id = p.id
+                WHERE p.id = %s
+                GROUP BY p.id
+            """, [primary_id])
+
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {"ok": True, "merged": len(secondary_ids)}

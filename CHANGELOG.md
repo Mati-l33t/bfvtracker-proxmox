@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026-04-10] — Player merge tool
+### Added
+- Admin panel: Merge Duplicate Players tool — search by name, shows all matching records with keyhash (truncated), last-seen date, score/kills/rounds; most recently used keyhash is highlighted as LAST USED and pre-selected as primary; merge button reassigns all stat tables to primary and recalculates cache_ranking
+
+### Fixed
+- Merge results table showed 0 rounds — API field is `rounds_played` but JS was reading `rounds`; corrected field name
+- Merge endpoint crashed with Internal Server Error — DELETE statements for `selectbf_cache_weaponkills`, `selectbf_cache_vehicletime`, `selectbf_cache_chartypeusage` referenced non-existent `player_id` column (these are global aggregate tables); removed invalid deletes
+
 ## [2026-04-10]
 ### Added
 - `/api/map-images` endpoint — auto-discovers map screen images from disk, builds slug→filename mapping so new maps show images automatically without manual config
