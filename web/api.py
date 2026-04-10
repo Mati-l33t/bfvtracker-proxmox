@@ -796,6 +796,33 @@ def heals_top():
     """)
 
 # ─── ROUTES: MAPS ─────────────────────────────────────────────────────────────
+
+MAPSCREENS_DIR = "/var/www/selectbf/templates/default/images/mapscreens"
+
+@app.get("/api/map-images")
+def map_images():
+    import re as _re
+    result = {}
+    try:
+        for fname in os.listdir(MAPSCREENS_DIR):
+            if fname.lower().endswith((".jpg", ".jpeg", ".png")):
+                base = _re.sub(r"\.[^.]+$", "", fname)
+                base = _re.sub(r"[\[\]()+]+", "", base)
+                # normalize: dashes to underscores, collapse, lowercase
+                slug = _re.sub(r"[-]+", "_", base)
+                slug = _re.sub(r"_+", "_", slug).strip("_").lower()
+                result[slug] = fname
+                # also index without trailing variant suffix (_a, _b, _c, _d)
+                slug_no_suffix = _re.sub(r"_[a-z]$", "", slug)
+                if slug_no_suffix != slug:
+                    result.setdefault(slug_no_suffix, fname)
+                # also index with all underscores removed
+                slug_nound = slug.replace("_", "")
+                result.setdefault(slug_nound, fname)
+    except Exception:
+        pass
+    return result
+
 @app.get("/api/maps")
 def maps_list():
     return q("""
@@ -904,7 +931,7 @@ def clans():
             ROUND(SUM(r.kills)/NULLIF(SUM(r.deaths),0),4) AS avg_kd,
             SUM(r.rounds_played) AS total_rounds
         FROM selectbf_clan_tags ct
-        JOIN selectbf_players p ON p.name LIKE CONCAT('%', ct.clan_tag, '%')
+        JOIN selectbf_players p ON p.name LIKE CONCAT('%%', ct.clan_tag, '%%')
         JOIN selectbf_cache_ranking r ON r.player_id = p.id
         GROUP BY ct.clan_tag ORDER BY total_score DESC
     """)

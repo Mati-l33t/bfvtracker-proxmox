@@ -31,6 +31,18 @@ c = re.sub(
     '<span class="pill-name">BFV Server</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">—</span>',
     c
 )
+# Strip site-specific forum link
+c = re.sub(
+    r'<a href="https://[^"]+" target="_blank" rel="noopener">Forum</a>',
+    '<a href="#" target="_blank" rel="noopener">Forum</a>',
+    c
+)
+# Strip site-specific logo image
+c = re.sub(
+    r'<img src="/[^"]*logo[^"]*" alt="logo"[^>]*>',
+    '<img src="/logo.png" alt="logo" style="width:32px;height:32px;object-fit:contain">',
+    c
+)
 open(f, 'w').write(c)
 
 # ── api.py ──

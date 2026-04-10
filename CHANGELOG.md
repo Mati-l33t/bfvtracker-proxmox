@@ -1,5 +1,34 @@
 # Changelog
 
+## [2026-04-10]
+### Added
+- `/api/map-images` endpoint — auto-discovers map screen images from disk, builds slug→filename mapping so new maps show images automatically without manual config
+- Hamburger menu for mobile/tablet (≤900px) — full-width dropdown nav with scrollable links and JOIN button, closes on nav or outside tap
+- Dynamic podium — top-3 players loaded from API on page load and when switching period tabs (All Time / Month / Week), no hardcoded names
+- Dynamic clans page — loads from `/api/clans` instead of hardcoded fake rows; page now properly wired to nav loader
+- `hue_alt` map image mapping added (resolves to hue1968.jpg)
+
+### Fixed
+- Clans API 500 error — `CONCAT('%', ...)` `%` chars were conflicting with pymysql format string, now escaped as `%%`
+- Podium cards used hardcoded player names/stats from mockup — replaced with real API data and numeric player IDs
+- Clans page had 4 fully hardcoded fake rows with no element IDs and no JS to populate them
+- Sticky table header `top:52px` offset caused misplaced line on mobile — set `position:static` on mobile breakpoint
+- JOIN button popup clipped by `nav overflow:hidden` — moved JOIN button outside `<nav>` so dropdown renders correctly
+- Mobile JOIN popup appeared off-screen — changed to `position:static` flow inside nav dropdown on mobile
+- Hero-meta box overflow — long server names now truncate with ellipsis instead of breaking layout
+- Server status pill stretched full-width on mobile landscape — now hidden on ≤900px (status visible in hero bar)
+
+### Changed
+- Sidebar background now matches player list (removed distinct `--bg-panel` background)
+- Sidebar moved to top of layout — now starts level with podium instead of below tabs
+- Podium moved inside player list column, centered with table width
+- Podium top borders: thicker (4px) and brighter (near-full opacity gold/silver/bronze)
+- Nav links larger (11px, more padding) for better readability
+- Hamburger breakpoint raised to 900px to cover landscape phones
+- VIETNAM watermark removed from hero bar
+- Removed `position:sticky` on table headers on mobile to prevent misaligned separators
+
+
 ## [2026-04-06]
 ### Fixed
 - install.sh now creates selectbf_ping_summary and selectbf_uptime_log tables on fresh install
