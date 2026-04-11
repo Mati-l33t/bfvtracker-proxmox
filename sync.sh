@@ -19,6 +19,8 @@ import re
 f = '/opt/bfvtracker-repo/web/index.html'
 c = open(f).read()
 c = re.sub(r'<title>BFV Stats[^<]*</title>', '<title>BFV Stats</title>', c)
+# Strip site-specific CSS comment header
+c = re.sub(r'/\* [=═]+\s+GmV BFV Stats.*?[=═]+ \*/', '/* BFV Stats */', c, flags=re.DOTALL)
 c = c.replace('\n<link rel="icon" type="image/png" href="/favicon.png">', '')
 c = re.sub(
     r'<div class="logo-text"><span class="logo-gmv">[^<]+</span>',

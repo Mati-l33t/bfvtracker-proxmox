@@ -1,5 +1,16 @@
 # Changelog
 
+## [2026-04-11] — Readability & UX fixes
+### Fixed
+- Server name in hero bar showed name from last completed game in DB — now updated in real time from live GameSpy query on every live poller tick
+- Admin "Run Parser Now" button gave no feedback — button now shows "⏳ Running..." and stays disabled until log is fetched; log auto-scrolls to bottom; added a second poll at 6s for slower runs
+- Live scoreboard showed "Auto-refresh every 5s" but actual interval is 10s — label corrected
+- Site-specific CSS comment header stripped from GitHub repo copy; sync.sh updated to strip it on future pushes
+
+### Changed
+- Dark mode dim text colors brightened: `--text-dim` #6b8299 → #90adc4, `--text-muted` #3d5570 → #607a96
+- Base font size increased from 14px to 16px for better readability across all pages
+
 ## [2026-04-10] — Light theme, UI polish
 ### Added
 - Light/dark theme toggle — moon/sun icon button in navbar between JOIN and Forum; switches theme instantly, persists across page loads via localStorage; dark theme unchanged
