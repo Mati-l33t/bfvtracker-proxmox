@@ -2928,22 +2928,33 @@ function adminChangePassword(){
 }
 function adminRunParser(){
   var btn=document.getElementById('parser-btn');
-  if(btn)btn.disabled=true;
+  var el=document.getElementById('parser-log');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Running...';}
+  if(el)el.innerHTML='<div class="log-info">Starting parser...</div>';
   fetch('/api/admin/run-parser',{method:'POST',headers:{'X-Admin-Token':adminToken||''}}).then(function(){
-    setTimeout(loadParserLog,2000);
-  }).catch(function(){alert('Failed to run parser');}).finally(function(){if(btn)btn.disabled=false;});
+    setTimeout(function(){loadParserLog(true);},2500);
+    setTimeout(function(){loadParserLog(true);},6000);
+  }).catch(function(){alert('Failed to run parser');if(btn){btn.disabled=false;btn.textContent='▶ Run Parser Now';}});
 }
-function loadParserLog(){
+function loadParserLog(scrollToBottom){
   var el=document.getElementById('parser-log');
   if(!el)return;
   fetch('/api/admin/parser-log',{headers:{'X-Admin-Token':adminToken||''}}).then(function(r){return r.json();}).then(function(d){
-    if(d.log)el.innerHTML=d.log.split('\n').map(function(l){
-      var c=(/[Ee]rror|[Ww]arning/.test(l))?'log-err':
-             (/[Ii]nserted|[Cc]omplete|OK/.test(l))?'log-ok':
-             (/[Ss]tarting|[Pp]arsing/.test(l))?'log-info':'log-dim';
-      return '<div class="'+c+'">'+esc(l)+'</div>';
-    }).join('');
-  }).catch(function(){});
+    var btn=document.getElementById('parser-btn');
+    if(d.log){
+      el.innerHTML=d.log.split('\n').map(function(l){
+        var c=(/[Ee]rror|[Ww]arning/.test(l))?'log-err':
+               (/[Ii]nserted|[Cc]omplete|OK/.test(l))?'log-ok':
+               (/[Ss]tarting|[Pp]arsing/.test(l))?'log-info':'log-dim';
+        return '<div class="'+c+'">'+esc(l)+'</div>';
+      }).join('');
+      if(scrollToBottom)el.scrollTop=el.scrollHeight;
+    }
+    if(btn&&btn.disabled){btn.disabled=false;btn.textContent='▶ Run Parser Now';}
+  }).catch(function(){
+    var btn=document.getElementById('parser-btn');
+    if(btn&&btn.disabled){btn.disabled=false;btn.textContent='▶ Run Parser Now';}
+  });
 }
 
 
