@@ -1224,7 +1224,7 @@ footer span{color:rgba(0,229,255,.35)}
       </div>
       <div class="tbl-wrap">
         <div class="srow">
-          <input class="s-input" style="flex:1" type="text" placeholder="Search player name..." oninput="onRankSearch(this.value)">
+          <input class="s-input" style="flex:1" type="search" placeholder="Search player name..." autocomplete="new-password" oninput="onRankSearch(this.value)">
           <button class="fbtn on" onclick="setRankFilter('all',this)">All</button>
           <button class="fbtn" onclick="setRankFilter('top50',this)">Top 50</button>
           <button class="fbtn" onclick="setRankFilter('clan',this)">Clan</button>
@@ -1560,11 +1560,11 @@ footer span{color:rgba(0,229,255,.35)}
     <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;align-items:end;flex-wrap:wrap">
       <div>
         <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Player Name</div>
-        <input class="s-input" style="width:100%" type="text" id="s-name" autocomplete="off" placeholder="Player name...">
+        <input class="s-input" style="width:100%" type="search" id="s-name" autocomplete="new-password" placeholder="Player name...">
       </div>
       <div>
         <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Server Name</div>
-        <input class="s-input" style="width:100%" type="text" id="s-server" autocomplete="off" placeholder="Server name...">
+        <input class="s-input" style="width:100%" type="search" id="s-server" autocomplete="new-password" placeholder="Server name...">
       </div>
       <div>
         <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Day</div>
@@ -1622,7 +1622,7 @@ footer span{color:rgba(0,229,255,.35)}
       <div class="card-hdr">Admin Login</div>
       <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
         <div style="font-size:11px;color:var(--lo);font-family:'JetBrains Mono',monospace">Enter admin password to continue</div>
-        <input class="ainput" type="password" id="admin-pw-input" placeholder="Password…" onkeydown="if(event.key==='Enter')adminLogin()">
+        <input class="ainput" type="password" id="admin-pw-input" placeholder="Password…" autocomplete="new-password" onkeydown="if(event.key==='Enter')adminLogin()">
         <button class="abtn primary" id="admin-login-btn" onclick="adminLogin()">Login</button>
         <div id="admin-login-err" style="color:var(--red);font-size:11px;min-height:16px"></div>
       </div>
@@ -1640,22 +1640,22 @@ footer span{color:rgba(0,229,255,.35)}
     <div class="admin-body">
       <div class="aform-row">
         <div class="alabel">Player Name</div>
-        <input class="ainput" type="text" id="ban-name" placeholder="Player name…" style="flex:1">
+        <input class="ainput" type="text" id="ban-name" placeholder="Player name…" autocomplete="new-password" style="flex:1">
         <button class="abtn danger" id="ban-btn" onclick="adminBan()">Ban Player</button>
       </div>
       <div class="aform-row">
         <div class="alabel">Reason</div>
-        <input class="ainput" type="text" id="ban-reason" placeholder="Reason for ban…" style="flex:1">
+        <input class="ainput" type="text" id="ban-reason" placeholder="Reason for ban…" autocomplete="new-password" style="flex:1">
         <div></div>
       </div>
       <div class="aform-row">
         <div class="alabel">IP <span style="color:var(--lo)">(opt)</span></div>
-        <input class="ainput" type="text" id="ban-ip" placeholder="e.g. 1.2.3.4 or * for any" style="flex:1">
+        <input class="ainput" type="text" id="ban-ip" placeholder="e.g. 1.2.3.4 or * for any" autocomplete="new-password" style="flex:1">
         <div></div>
       </div>
       <div class="aform-row">
         <div class="alabel">Key hash <span style="color:var(--lo)">(opt)</span></div>
-        <input class="ainput" type="text" id="ban-keyhash" placeholder="32-char keyhash or * for any" style="flex:1">
+        <input class="ainput" type="text" id="ban-keyhash" placeholder="32-char keyhash or * for any" autocomplete="new-password" style="flex:1">
         <div></div>
       </div>
     </div>
@@ -1670,7 +1670,7 @@ footer span{color:rgba(0,229,255,.35)}
       <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:10px">Players whose names contain a clan tag will appear under the <strong>Clan</strong> filter on the rankings page.</div>
       <div class="aform-row">
         <div class="alabel">New Tag</div>
-        <input class="ainput" type="text" id="clan-tag-input" placeholder="e.g. -{GmV}-" style="flex:1">
+        <input class="ainput" type="text" id="clan-tag-input" placeholder="e.g. -{GmV}-" autocomplete="new-password" style="flex:1">
         <button class="abtn primary" onclick="adminAddClanTag()">Add</button>
       </div>
       <div id="clan-tag-list" style="margin-top:10px"></div>
@@ -1684,7 +1684,7 @@ footer span{color:rgba(0,229,255,.35)}
       </div>
       <div class="aform-row">
         <div class="alabel">Player Name</div>
-        <input class="ainput" type="text" id="merge-search-input" placeholder="Search player name…" style="flex:1">
+        <input class="ainput" type="search" id="merge-search-input" placeholder="Search player name…" autocomplete="new-password" style="flex:1">
         <button class="abtn primary" onclick="mergeSearch()">Search</button>
       </div>
       <div id="merge-results" style="margin-top:12px"></div>
@@ -1693,7 +1693,7 @@ footer span{color:rgba(0,229,255,.35)}
     <div class="admin-body">
       <div class="aform-row">
         <div class="alabel">New Password</div>
-        <input class="ainput" type="password" id="admin-pw-new" placeholder="New password…" style="flex:1">
+        <input class="ainput" type="password" id="admin-pw-new" placeholder="New password…" autocomplete="new-password" style="flex:1">
         <button class="abtn primary" id="admin-pw-btn" onclick="adminChangePassword()">Update</button>
       </div>
     </div>
@@ -2770,7 +2770,7 @@ function initAdmin(){
   }else showAdminLogin();
 }
 function showAdminLogin(){
-  setEl('admin-login-section','<div class="card" style="max-width:380px;margin:40px auto"><div class="card-hdr">Admin Login</div><div style="padding:18px;display:flex;flex-direction:column;gap:12px"><div style="font-size:11px;color:var(--lo);font-family:\'JetBrains Mono\',monospace">Enter admin password to continue</div><input class="ainput" type="password" id="admin-pw-input" placeholder="Password\u2026" onkeydown="if(event.key===\'Enter\')adminLogin()"><button class="abtn primary" onclick="adminLogin()">Login</button><div id="admin-login-err" style="color:var(--red);font-size:11px;min-height:16px"></div></div></div>');
+  setEl('admin-login-section','<div class="card" style="max-width:380px;margin:40px auto"><div class="card-hdr">Admin Login</div><div style="padding:18px;display:flex;flex-direction:column;gap:12px"><div style="font-size:11px;color:var(--lo);font-family:\'JetBrains Mono\',monospace">Enter admin password to continue</div><input class="ainput" type="password" id="admin-pw-input" placeholder="Password\u2026" autocomplete="new-password" onkeydown="if(event.key===\'Enter\')adminLogin()"><button class="abtn primary" onclick="adminLogin()">Login</button><div id="admin-login-err" style="color:var(--red);font-size:11px;min-height:16px"></div></div></div>');
   var ps=document.getElementById('admin-panel-section');
   if(ps)ps.style.display='none';
 }
