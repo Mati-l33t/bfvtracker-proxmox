@@ -2,6 +2,7 @@
 
 ## [2026-04-11] — Readability & UX fixes
 ### Fixed
+- Chrome showing email/password credential popup when clicking any search bar — all search and admin inputs now use `type="search"` and `autocomplete="new-password"` so Chrome no longer treats the page as a login form
 - Server name in hero bar showed name from last completed game in DB — now updated in real time from live GameSpy query on every live poller tick
 - Admin "Run Parser Now" button gave no feedback — button now shows "⏳ Running..." and stays disabled until log is fetched; log auto-scrolls to bottom; added a second poll at 6s for slower runs
 - Live scoreboard showed "Auto-refresh every 5s" but actual interval is 10s — label corrected
