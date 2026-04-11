@@ -5,7 +5,13 @@ Built on top of [selectbf](https://github.com/toadle/selectbf) with a modern web
 
 Runs on any **Debian 11/12/13** or **Ubuntu 22.04+** machine — bare metal, VM, or LXC.
 
-![Modern UI](https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main/docs/bfv-modern.PNG)
+**Dark mode**
+
+![Dark mode](https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main/docs/bfv-modern.PNG)
+
+**Light mode**
+
+![Light mode](https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main/docs/bfv-light.PNG)
 
 ![Classic UI](https://raw.githubusercontent.com/Mati-l33t/bfvtracker-proxmox/main/docs/bfv-old.PNG)
 
