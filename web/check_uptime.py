@@ -7,7 +7,7 @@ cfg = dotenv_values("/opt/bfvstats/.env")
 DB  = dict(host=cfg["DB_HOST"], port=int(cfg.get("DB_PORT", 3306)),
            user=cfg["DB_USER"], password=cfg["DB_PASS"], db=cfg["DB_NAME"],
            charset="utf8mb4")
-BFV_HOST       = cfg.get("BFV_HOST", "10.0.0.70")
+BFV_HOST       = cfg.get("BFV_HOST", "127.0.0.1")
 BFV_QUERY_PORT = int(cfg.get("BFV_QUERY_PORT", 23000))
 
 def is_online():

@@ -6,6 +6,7 @@
 - GitHub template had installer placeholders missing — `__SITE_TITLE__`, `__LOGO_FILE__`, `__SERVER_NAME__`, `__FORUM_LINK__` were replaced with static strings by sync.sh instead of being restored as placeholders, breaking fresh installs for other users; all placeholders restored in `web/index.html` and `sync.sh` updated to restore them correctly on future syncs
 - Player profile section in GitHub template had real player data (name, stats) from the live site baked in; replaced with generic `—` defaults
 - Admin clan tag input placeholder showed a site-specific tag example; changed to generic `e.g. [TAG]`
+- `check_uptime.py` and `config/run-parser.sh` had a hardcoded internal server IP as fallback; replaced with `127.0.0.1` / `YOUR_BFV_SERVER_IP`; `sync.sh` updated to strip these on future syncs
 
 ## [2026-04-11] — Readability & UX fixes
 ### Fixed

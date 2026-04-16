@@ -2,7 +2,7 @@
 # Copyright (c) 2025-2026 -{GmV}- m@gic — https://github.com/Mati-l33t
 LOG=/opt/bfvstats/logs/parser.log
 LOCK=/tmp/bfvstats-parser.lock
-BFV_SERVER_IP="10.0.0.70"
+BFV_SERVER_IP="YOUR_BFV_SERVER_IP"
 BFV_REMOTE_LOG="/opt/bfv/mods/bfvietnam/logs"
 BFV_LOCAL_LOG="/opt/bfv/logs"
 

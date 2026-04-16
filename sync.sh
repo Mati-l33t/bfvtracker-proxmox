@@ -64,8 +64,19 @@ open(f, 'w').write(c)
 # ── api.py ──
 f = '/opt/bfvtracker-repo/web/api.py'
 c = open(f).read()
-# Replace hardcoded fallback IP with placeholder
 c = re.sub(r'cfg\.get\("BFV_HOST",\s*"[^"]+"\)', 'cfg.get("BFV_HOST", "127.0.0.1")', c)
+open(f, 'w').write(c)
+
+# ── check_uptime.py ──
+f = '/opt/bfvtracker-repo/web/check_uptime.py'
+c = open(f).read()
+c = re.sub(r'cfg\.get\("BFV_HOST",\s*"[^"]+"\)', 'cfg.get("BFV_HOST", "127.0.0.1")', c)
+open(f, 'w').write(c)
+
+# ── config/run-parser.sh ──
+f = '/opt/bfvtracker-repo/config/run-parser.sh'
+c = open(f).read()
+c = re.sub(r'BFV_SERVER_IP="[^"]+"', 'BFV_SERVER_IP="YOUR_BFV_SERVER_IP"', c)
 open(f, 'w').write(c)
 PYEOF
 
