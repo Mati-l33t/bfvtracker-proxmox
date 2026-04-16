@@ -3,6 +3,9 @@
 ## [2026-04-16]
 ### Fixed
 - Rank #1 row clipped in player profile stat boxes (Nicknames, Character Types, Weapons, Vehicle Time, Top Victims, Top Assassins, Map Performance, Last Games) — sticky `thead th` rule applied globally caused the column header to visually shift down over the first data row when scrolling; added `.card thead th{position:static}` to disable sticky on compact card tables where it isn't needed
+- GitHub template had installer placeholders missing — `__SITE_TITLE__`, `__LOGO_FILE__`, `__SERVER_NAME__`, `__FORUM_LINK__` were replaced with static strings by sync.sh instead of being restored as placeholders, breaking fresh installs for other users; all placeholders restored in `web/index.html` and `sync.sh` updated to restore them correctly on future syncs
+- Player profile section in GitHub template had real player data (name, stats) from the live site baked in; replaced with generic `—` defaults
+- Admin clan tag input placeholder showed a site-specific tag example; changed to generic `e.g. [TAG]`
 
 ## [2026-04-11] — Readability & UX fixes
 ### Fixed

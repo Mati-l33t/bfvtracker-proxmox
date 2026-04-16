@@ -18,33 +18,47 @@ import re
 # ── index.html ──
 f = '/opt/bfvtracker-repo/web/index.html'
 c = open(f).read()
-c = re.sub(r'<title>BFV Stats[^<]*</title>', '<title>BFV Stats</title>', c)
+
+# Restore installer placeholders (install.sh patches these on fresh install)
+c = re.sub(r'<title>[^<]*</title>', '<title>__SITE_TITLE__</title>', c)
+c = re.sub(r'<span class="logo-gmv">[^<]+</span>', '<span class="logo-gmv">__SITE_TITLE__</span>', c)
+c = re.sub(
+    r'<span class="pill-name">[^<]*</span>',
+    '<span class="pill-name">__SERVER_NAME__</span>',
+    c
+)
+# Forum link: restore placeholder (install.sh sets full <a> tag or empty string)
+c = re.sub(
+    r'<a href="[^"]*" target="_blank" rel="noopener">Forum</a>',
+    '__FORUM_LINK__',
+    c
+)
+# Logo image: restore placeholder
+c = re.sub(
+    r'<img src="/[^"]*" alt="logo"([^>]*)>',
+    r'<img src="/__LOGO_FILE__" alt="logo"\1>',
+    c
+)
+
 # Strip site-specific CSS comment header
 c = re.sub(r'/\* [=═]+\s+GmV BFV Stats.*?[=═]+ \*/', '/* BFV Stats */', c, flags=re.DOTALL)
+
+# Remove site-specific favicon (each install uses their own)
 c = c.replace('\n<link rel="icon" type="image/png" href="/favicon.png">', '')
-c = re.sub(
-    r'<div class="logo-text"><span class="logo-gmv">[^<]+</span>',
-    '<div class="logo-text"><span class="logo-gmv">BFV</span>',
-    c
-)
-# Strip hardcoded server name and IP from header pill
-c = re.sub(
-    r'<span class="pill-name">[^<]*</span><span class="pill-addr">[^<]*<span id="header-addr">[^<]*</span>',
-    '<span class="pill-name">BFV Server</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">—</span>',
-    c
-)
-# Strip site-specific forum link
-c = re.sub(
-    r'<a href="https://[^"]+" target="_blank" rel="noopener">Forum</a>',
-    '<a href="#" target="_blank" rel="noopener">Forum</a>',
-    c
-)
-# Strip site-specific logo image
-c = re.sub(
-    r'<img src="/[^"]*logo[^"]*" alt="logo"[^>]*>',
-    '<img src="/logo.png" alt="logo" style="width:32px;height:32px;object-fit:contain">',
-    c
-)
+
+# Reset player profile static defaults to generic values
+c = re.sub(r'(<div class="pp-name" id="pp-name">)[^<]*(</div>)', r'\g<1>—\2', c)
+c = re.sub(r'(<div class="pp-sub" id="pp-sub">)[^<]*(</div>)', r'\g<1>\2', c)
+for pid in ['pp-dname','pp-dseen','pp-drounds','pp-dscore','pp-dkills',
+            'pp-ddeaths','pp-dkd','pp-dsr']:
+    c = re.sub(r'(id="' + pid + r'"[^>]*>)[^<]*(</div>)', r'\g<1>—\2', c)
+c = re.sub(r'(id="pp-dtks"[^>]*>)[^<]*(</div>)', r'\g<1>—\2', c)
+
+# Admin clan tag input — generic placeholder
+c = re.sub(r'placeholder="e\.g\. [^"]*"(\s+autocomplete="new-password"[^>]*id="clan-tag-input"|[^>]*id="clan-tag-input"[^>]*)',
+           r'placeholder="e.g. [TAG]"\1', c)
+c = re.sub(r'(id="clan-tag-input"[^>]*)placeholder="e\.g\. [^"]*"', r'\1placeholder="e.g. [TAG]"', c)
+
 open(f, 'w').write(c)
 
 # ── api.py ──

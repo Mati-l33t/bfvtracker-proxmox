@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BFV Stats</title>
+<title>__SITE_TITLE__</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oxanium:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1147,8 +1147,8 @@ footer span{color:rgba(0,229,255,.35)}
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="logo" onclick="nav('players')" style="cursor:pointer">
-    <img src="/logo.png" alt="logo" style="width:32px;height:32px;object-fit:contain">
-    <div class="logo-text"><span class="logo-gmv">BFV</span> <span class="logo-sub">Server STATS</span></div>
+    <img src="/__LOGO_FILE__" alt="logo" style="width:32px;height:32px;object-fit:contain">
+    <div class="logo-text"><span class="logo-gmv">__SITE_TITLE__</span> <span class="logo-sub">Server STATS</span></div>
   </div>
   <button class="hamburger" id="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
     <span></span><span></span><span></span>
@@ -1162,7 +1162,7 @@ footer span{color:rgba(0,229,255,.35)}
     <a onclick="nav('games')" id="nav-games">Games</a>
     <a onclick="nav('search')" id="nav-search">Search</a>
     <a onclick="nav('chars')" id="nav-chars">Characters</a>
-    <a href="#" target="_blank" rel="noopener">Forum</a>
+    __FORUM_LINK__
 
     <div class="mob-join-row">
       <span class="btn-join" onclick="toggleJoinPopupMob(event)">JOIN
@@ -1189,7 +1189,7 @@ footer span{color:rgba(0,229,255,.35)}
   </span>
   <div class="server-pill">
     <div class="dot"></div>
-    <span class="pill-name">BFV Server</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">—</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
+    <span class="pill-name">__SERVER_NAME__</span><span class="pill-addr">&nbsp;·&nbsp; <span id="header-addr">—</span></span> &nbsp;·&nbsp; <span id="header-online">—</span>
   </div>
 </header>
 
@@ -1314,8 +1314,8 @@ footer span{color:rgba(0,229,255,.35)}
   <div class="pp-hero">
     <div class="pp-big-av" id="pp-av">N</div>
     <div class="pp-info">
-      <div class="pp-name" id="pp-name">Nagi Tanka</div>
-      <div class="pp-sub" id="pp-sub">Last seen: 2024-04-14 22:59:00 · Rank #2</div>
+      <div class="pp-name" id="pp-name">—</div>
+      <div class="pp-sub" id="pp-sub"></div>
       <div class="pp-kpis" id="pp-kpis"></div>
     </div>
   </div>
@@ -1323,15 +1323,15 @@ footer span{color:rgba(0,229,255,.35)}
   <div class="detail-two-col">
     <div class="card">
       <div class="card-hdr">Player Details</div>
-      <div class="drow"><div class="dk">Playername</div><div class="dv" id="pp-dname">Nagi Tanka</div></div>
-      <div class="drow"><div class="dk">Last Seen</div><div class="dv" id="pp-dseen">2024-04-14 22:59:00</div></div>
-      <div class="drow"><div class="dk">Rounds Played</div><div class="dv" id="pp-drounds">6,241</div></div>
-      <div class="drow"><div class="dk">Total Score</div><div class="dv" id="pp-dscore">129,110</div></div>
-      <div class="drow"><div class="dk">Total Kills</div><div class="dv" id="pp-dkills">63,616</div></div>
-      <div class="drow"><div class="dk">Total Deaths</div><div class="dv" id="pp-ddeaths">82,311</div></div>
-      <div class="drow"><div class="dk">K/D Ratio</div><div class="dv" id="pp-dkd">0.773</div></div>
-      <div class="drow"><div class="dk">Total TKs</div><div class="dv" id="pp-dtks" style="color:var(--red)">4,194</div></div>
-      <div class="drow"><div class="dk">Score / Round</div><div class="dv" id="pp-dsr">20.69</div></div>
+      <div class="drow"><div class="dk">Playername</div><div class="dv" id="pp-dname">—</div></div>
+      <div class="drow"><div class="dk">Last Seen</div><div class="dv" id="pp-dseen">—</div></div>
+      <div class="drow"><div class="dk">Rounds Played</div><div class="dv" id="pp-drounds">—</div></div>
+      <div class="drow"><div class="dk">Total Score</div><div class="dv" id="pp-dscore">—</div></div>
+      <div class="drow"><div class="dk">Total Kills</div><div class="dv" id="pp-dkills">—</div></div>
+      <div class="drow"><div class="dk">Total Deaths</div><div class="dv" id="pp-ddeaths">—</div></div>
+      <div class="drow"><div class="dk">K/D Ratio</div><div class="dv" id="pp-dkd">—</div></div>
+      <div class="drow"><div class="dk">Total TKs</div><div class="dv" id="pp-dtks" style="color:var(--red)">—</div></div>
+      <div class="drow"><div class="dk">Score / Round</div><div class="dv" id="pp-dsr">—</div></div>
       <div class="drow"><div class="dk">Awards</div><div class="dv" id="pp-dawards"></div></div>
       <div class="drow"><div class="dk">🔧 Repairs</div><div class="dv" id="pp-drepairs">5min 42.66sec on 11,679 pts</div></div>
       <div class="drow"><div class="dk">💊 Self Heals</div><div class="dv" id="pp-dheal-self">0.00 sec</div></div>
@@ -1674,7 +1674,7 @@ footer span{color:rgba(0,229,255,.35)}
       <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);margin-bottom:10px">Players whose names contain a clan tag will appear under the <strong>Clan</strong> filter on the rankings page.</div>
       <div class="aform-row">
         <div class="alabel">New Tag</div>
-        <input class="ainput" type="text" id="clan-tag-input" placeholder="e.g. -{GmV}-" autocomplete="new-password" style="flex:1">
+        <input class="ainput" type="text" id="clan-tag-input" placeholder="e.g. [TAG]" autocomplete="new-password" style="flex:1">
         <button class="abtn primary" onclick="adminAddClanTag()">Add</button>
       </div>
       <div id="clan-tag-list" style="margin-top:10px"></div>
