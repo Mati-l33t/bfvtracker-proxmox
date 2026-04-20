@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-04-20]
+### Fixed
+- Operation Irving map image not showing — MAP_IMG only had `'irving'` as a key but the game reports the slug as `operation_irving`; added `operation_irving` and `operationirving` entries pointing to `irving.jpg`
+
 ## [2026-04-16]
 ### Fixed
 - Rank #1 row clipped in player profile stat boxes (Nicknames, Character Types, Weapons, Vehicle Time, Top Victims, Top Assassins, Map Performance, Last Games) — sticky `thead th` rule applied globally caused the column header to visually shift down over the first data row when scrolling; added `.card thead th{position:static}` to disable sticky on compact card tables where it isn't needed
