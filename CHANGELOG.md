@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-09-11]
+### Fixed
+- Hue map image not showing — MAP_IMG had `hue_alt` and `huealt` but not the plain `hue` slug the game reports; added `hue` pointing to `hue1968.jpg`
+
 ## [2026-04-20]
 ### Fixed
 - Operation Irving map image not showing — MAP_IMG only had `'irving'` as a key but the game reports the slug as `operation_irving`; added `operation_irving` and `operationirving` entries pointing to `irving.jpg`
