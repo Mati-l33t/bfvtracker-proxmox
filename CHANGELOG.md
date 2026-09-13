@@ -2,6 +2,7 @@
 
 ## [2026-09-13]
 ### Fixed
+- Map win counts were multiplied by the number of players in each round (`/api/maps` and `/api/maps/{id}` summed wins across the joined player-stats rows) — wins now counted once per round, and per-team kills/deaths on the map page are summed per round instead of through a cross join
 - Player profile template still contained mock values (repairs line, heal lines) — replaced with `—` placeholders
 ### Added
 - `<meta name="description">` and a `<noscript>` notice so crawlers and JavaScript-less readers see a description instead of empty counters

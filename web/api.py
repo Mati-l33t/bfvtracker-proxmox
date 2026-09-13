@@ -830,8 +830,8 @@ def maps_list():
             g.map AS id,
             g.map AS name,
             COUNT(DISTINCT r.id) AS rounds,
-            SUM(CASE WHEN r.winning_team=1 THEN 1 ELSE 0 END) AS red_wins,
-            SUM(CASE WHEN r.winning_team=2 THEN 1 ELSE 0 END) AS blue_wins,
+            COUNT(DISTINCT CASE WHEN r.winning_team=1 THEN r.id END) AS red_wins,
+            COUNT(DISTINCT CASE WHEN r.winning_team=2 THEN r.id END) AS blue_wins,
             SUM(ps.kills) AS total_kills
         FROM selectbf_games g
         JOIN selectbf_rounds r ON r.game_id = g.id
@@ -847,16 +847,22 @@ def map_detail(map_id: str):
 
     team_stats = q1("""
         SELECT
-          SUM(CASE WHEN r.winning_team=1 THEN 1 ELSE 0 END) AS red_wins,
-          SUM(CASE WHEN r.winning_team=2 THEN 1 ELSE 0 END) AS blue_wins,
-          SUM(ps_t1.kills) AS red_kills,  SUM(ps_t2.kills) AS blue_kills,
-          SUM(ps_t1.deaths) AS red_deaths, SUM(ps_t2.deaths) AS blue_deaths,
+          SUM(r.winning_team=1) AS red_wins,
+          SUM(r.winning_team=2) AS blue_wins,
+          SUM(t.red_kills) AS red_kills,   SUM(t.blue_kills) AS blue_kills,
+          SUM(t.red_deaths) AS red_deaths, SUM(t.blue_deaths) AS blue_deaths,
           AVG(CASE WHEN r.winning_team=1 THEN r.end_tickets_team1 END) AS avg_red_tickets_win,
           AVG(CASE WHEN r.winning_team=2 THEN r.end_tickets_team2 END) AS avg_blue_tickets_win
         FROM selectbf_games g
         JOIN selectbf_rounds r ON r.game_id = g.id
-        LEFT JOIN selectbf_playerstats ps_t1 ON ps_t1.round_id=r.id AND ps_t1.team=1
-        LEFT JOIN selectbf_playerstats ps_t2 ON ps_t2.round_id=r.id AND ps_t2.team=2
+        LEFT JOIN (
+            SELECT round_id,
+                   SUM(CASE WHEN team=1 THEN kills  ELSE 0 END) AS red_kills,
+                   SUM(CASE WHEN team=2 THEN kills  ELSE 0 END) AS blue_kills,
+                   SUM(CASE WHEN team=1 THEN deaths ELSE 0 END) AS red_deaths,
+                   SUM(CASE WHEN team=2 THEN deaths ELSE 0 END) AS blue_deaths
+            FROM selectbf_playerstats GROUP BY round_id
+        ) t ON t.round_id = r.id
         WHERE g.map=%s
     """, [map_id])
 
