@@ -556,7 +556,7 @@ def player_detail(player_id: int):
         [player_id])
 
     weapons = q(
-        """SELECT weapon AS name, SUM(times_used) AS kills,
+        """SELECT IF(weapon='(none)','Roadkill / other',weapon) AS name, SUM(times_used) AS kills,
            ROUND(SUM(times_used)*100.0/NULLIF((SELECT kills FROM selectbf_cache_ranking WHERE player_id=%s),0),2) AS pct
            FROM selectbf_kills_weapon WHERE player_id=%s
            GROUP BY weapon ORDER BY kills DESC LIMIT 30""",
@@ -709,7 +709,7 @@ def game_detail(game_id: int):
 @app.get("/api/weapons")
 def weapons_global():
     return q("""
-        SELECT weapon AS name, SUM(times_used) AS kills,
+        SELECT IF(weapon='(none)','Roadkill / other',weapon) AS name, SUM(times_used) AS kills,
         ROUND(SUM(times_used)*100.0/(SELECT SUM(times_used) FROM selectbf_kills_weapon),2) AS pct
         FROM selectbf_kills_weapon GROUP BY weapon ORDER BY kills DESC LIMIT 50
     """)
