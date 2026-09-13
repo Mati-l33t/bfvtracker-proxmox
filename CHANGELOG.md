@@ -1,5 +1,11 @@
 # Changelog
 
+## [2026-09-13]
+### Fixed
+- Player profile template still contained mock values (repairs line, heal lines) — replaced with `—` placeholders
+### Added
+- `<meta name="description">` and a `<noscript>` notice so crawlers and JavaScript-less readers see a description instead of empty counters
+
 ## [2026-09-11]
 ### Fixed
 - Hue map image not showing — MAP_IMG had `hue_alt` and `huealt` but not the plain `hue` slug the game reports; added `hue` pointing to `hue1968.jpg`
